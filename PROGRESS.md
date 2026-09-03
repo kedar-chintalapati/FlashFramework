@@ -9,10 +9,11 @@ This file is an interruption-safe checkpoint for the Flash v0.1 implementation.
 - GCC reflection probe verified after accounting for the shipped two-argument `std::meta::members_of` and `nonstatic_data_members_of` APIs, which require an explicit `std::meta::access_context`.
 - CMake, Conan, target split, warnings, presets, version smoke test, and initial documentation scaffolded.
 - The proposed Boost 1.92 Conan recipe is not published by the configured Conan Center remote; the project therefore pins the newest available recipe, Boost 1.91.0.
+- Route/source/validation annotation values, reflected namespace discovery, function-parameter and aggregate-field inspection, and direct reflected invocation pass in Debug and Release.
 
 ## Milestones
 
-- [ ] M0: compiler and reflection spike
+- [ ] M0: compiler and reflection spike (compile-fail harness remains)
 - [ ] M1: HTTP runtime and raw endpoints
 - [ ] M2: compile-time routes
 - [ ] M3: typed scalar binding
@@ -23,9 +24,9 @@ This file is an interruption-safe checkpoint for the Flash v0.1 implementation.
 
 ## Immediate next work
 
-1. Install the pinned Conan dependency graph and verify clean Debug/Release configure paths.
-2. Commit annotation value types and a five-case reflection test.
-3. Add compile-fail infrastructure and stable Flash diagnostic identifiers.
+1. Add compile-fail infrastructure and stable Flash diagnostic identifiers.
+2. Implement the bounded HTTP request/response types and Beast runtime.
+3. Add the raw endpoint integration server and handwritten Beast baseline.
 
 ## Safety and recovery notes
 

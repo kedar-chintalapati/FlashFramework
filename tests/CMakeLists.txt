@@ -13,6 +13,11 @@ target_link_libraries(flash_http_types_test PRIVATE flash::runtime)
 flash_enable_warnings(flash_http_types_test)
 add_test(NAME flash.http_types COMMAND flash_http_types_test)
 
+add_executable(flash_routing_test unit/routing_test.cpp)
+target_link_libraries(flash_routing_test PRIVATE flash::meta)
+flash_enable_warnings(flash_routing_test)
+add_test(NAME flash.routing COMMAND flash_routing_test)
+
 add_executable(flash_raw_server_test integration/raw_server_test.cpp)
 target_link_libraries(flash_raw_server_test PRIVATE flash::runtime)
 flash_enable_warnings(flash_raw_server_test)
@@ -46,6 +51,19 @@ flash_add_compile_fail_test(
     compile_fail/missing_route_annotation.cpp
     FLASH-E003
 )
+
+flash_add_compile_fail_test(
+    flash.compile_fail.invalid_route
+    compile_fail/invalid_route.cpp
+    FLASH-E200
+)
+
+flash_add_compile_fail_test(
+    flash.compile_fail.ambiguous_route
+    compile_fail/ambiguous_route.cpp
+    FLASH-E201
+)
+
 
 flash_add_compile_fail_test(
     flash.compile_fail.duplicate_route

@@ -7,6 +7,8 @@
 #include <flash/raw.hpp>
 #include <flash/request.hpp>
 #include <flash/response.hpp>
+#include <flash/routing/matcher.hpp>
+#include <flash/routing/route.hpp>
 #include <flash/server.hpp>
 #include <flash/task.hpp>
 #include <flash/version.hpp>

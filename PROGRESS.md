@@ -15,6 +15,7 @@ This file is an interruption-safe checkpoint for the Flash v0.1 implementation.
 - The first Beast/Asio coroutine server supports bounded header/body parsing, finite deadlines, sequential keep-alive, raw async handlers, validated responses, and cooperative stop.
 - Loopback integration coverage includes keep-alive reuse, connection close, 404 handling, oversized request rejection, and malformed-header rejection.
 - A bounded concurrency test drives eight simultaneous keep-alive clients through two I/O workers and verifies every response and handler invocation.
+- Consteval route parsing now normalizes literal, parameter, and catch-all segments; the generated API matcher implements deterministic specificity, captures, 404/405, implicit HEAD, automatic OPTIONS, and `Allow` calculation.
 
 ## Milestones
 

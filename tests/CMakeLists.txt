@@ -23,6 +23,11 @@ target_link_libraries(flash_scalar_binding_test PRIVATE flash::meta)
 flash_enable_warnings(flash_scalar_binding_test)
 add_test(NAME flash.scalar_binding COMMAND flash_scalar_binding_test)
 
+add_executable(flash_scalar_allocation_test unit/scalar_allocation_test.cpp)
+target_link_libraries(flash_scalar_allocation_test PRIVATE flash::meta)
+flash_enable_warnings(flash_scalar_allocation_test)
+add_test(NAME flash.scalar_allocation COMMAND flash_scalar_allocation_test)
+
 add_executable(flash_typed_dispatch_test unit/typed_dispatch_test.cpp)
 target_link_libraries(flash_typed_dispatch_test PRIVATE flash::flash)
 flash_enable_warnings(flash_typed_dispatch_test)
@@ -40,6 +45,13 @@ target_link_libraries(flash_raw_concurrency_test PRIVATE flash::runtime)
 flash_enable_warnings(flash_raw_concurrency_test)
 add_test(NAME flash.raw_concurrency COMMAND flash_raw_concurrency_test)
 set_tests_properties(flash.raw_concurrency PROPERTIES TIMEOUT 20)
+
+add_executable(flash_typed_server_test integration/typed_server_test.cpp)
+target_link_libraries(flash_typed_server_test PRIVATE flash::flash)
+flash_enable_warnings(flash_typed_server_test)
+add_test(NAME flash.typed_server COMMAND flash_typed_server_test)
+set_tests_properties(flash.typed_server PROPERTIES TIMEOUT 20)
+
 
 
 

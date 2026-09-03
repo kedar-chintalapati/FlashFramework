@@ -18,13 +18,15 @@ This file is an interruption-safe checkpoint for the Flash v0.1 implementation.
 - Consteval route parsing now normalizes literal, parameter, and catch-all segments; the generated API matcher implements deterministic specificity, captures, 404/405, implicit HEAD, automatic OPTIONS, and `Allow` calculation.
 - Strict scalar codecs cover booleans, integral/floating range checks, strings, reflected enum names, percent decoding, and bounded duplicate-aware query/header/cookie lookup.
 - Generated typed adapters infer path/query/body/context sources, honor explicit header/cookie/default metadata, bind into reflected parameter types, invoke functions directly through splicers, and map scalar/text/void results plus routing errors into HTTP responses.
+- The reflected dispatcher is connected to the Beast runtime; the hello example and loopback integration test exercise real typed GET/DELETE routes and 422 errors over HTTP/1.1.
+- Allocation instrumentation verifies zero calls to global `new` across 10,000 successful generated route matches plus two integer path bindings; transport, coroutine, response, and user-code allocations are explicitly outside that test boundary.
 
 ## Milestones
 
 - [x] M0: compiler and reflection spike
 - [x] M1: HTTP runtime and raw endpoints
-- [ ] M2: compile-time routes
-- [ ] M3: typed scalar binding
+- [x] M2: compile-time routes
+- [x] M3: typed scalar binding
 - [ ] M4: reflected schema and JSON
 - [ ] M5: responses, errors, and OpenAPI
 - [ ] M6: async, state, and middleware
@@ -32,9 +34,9 @@ This file is an interruption-safe checkpoint for the Flash v0.1 implementation.
 
 ## Immediate next work
 
-1. Implement the consteval route grammar and normalized route shape.
-2. Reject route conflicts with stable compile diagnostics.
-3. Dispatch static, parameter, and catch-all routes with 404/405/HEAD/OPTIONS semantics.
+1. Implement the native typed JSON cursor and reflected aggregate field access.
+2. Add strict duplicate/unknown/missing/null behavior, containers, aliases, and validation.
+3. Exercise a registration-free typed JSON POST endpoint over loopback HTTP.
 
 ## Safety and recovery notes
 

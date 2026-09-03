@@ -21,3 +21,7 @@ ctest --preset debug
 
 Flash is not production-ready. The API, supported compiler revision, and implementation are expected to change during the experimental v0.1 cycle.
 
+## Tooling limitation
+
+G++ is authoritative for code containing reflection syntax. Current clangd builds do not understand `^^`, splicers, annotation expressions, or the rest of the P2996/P3394 feature set, so editor diagnostics can be noisy under `include/flash/meta/`. Do not remove `-freflection` to silence those diagnostics.
+

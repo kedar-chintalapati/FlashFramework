@@ -43,6 +43,9 @@ template <std::meta::info Namespace>
     return count;
 }
 
+template <std::meta::info Namespace>
+inline constexpr std::size_t endpoint_count_v = endpoint_count<Namespace>();
+
 template <std::meta::info Namespace, std::size_t Index>
 [[nodiscard]] consteval std::meta::info endpoint_at() {
     static_assert(Index < endpoint_count<Namespace>(),
@@ -102,4 +105,3 @@ constexpr decltype(auto) invoke(Arguments&&... arguments) {
 }
 
 } // namespace flash::meta
-

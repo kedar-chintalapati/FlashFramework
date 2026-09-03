@@ -22,6 +22,7 @@
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
+#include <concepts>
 #include <exception>
 #include <functional>
 #include <memory>
@@ -43,19 +44,6 @@ namespace asio = boost::asio;
 namespace beast = boost::beast;
 namespace http = beast::http;
 using tcp = asio::ip::tcp;
-
-template <class>
-struct awaitable_result;
-
-template <class Value, class Executor>
-struct awaitable_result<asio::awaitable<Value, Executor>> {
-    using type = Value;
-};
-
-template <class Value>
-concept asio_awaitable = requires {
-    typename awaitable_result<std::remove_cvref_t<Value>>::type;
-};
 
 [[nodiscard]] inline std::optional<http_method> to_flash_method(http::verb method) noexcept {
     switch (method) {
@@ -109,10 +97,16 @@ task<response_message> invoke_raw_handler(Handler& handler, raw_request_view req
     using result_type = std::invoke_result_t<Handler&, raw_request_view, raw_response_writer&>;
     if constexpr (std::is_void_v<result_type>) {
         std::invoke(handler, request, writer);
-    } else if constexpr (asio_awaitable<result_type>) {
-        static_assert(std::is_void_v<typename awaitable_result<result_type>::type>,
-                      "FLASH-E100: a raw awaitable handler must return task<void>");
-        co_await std::invoke(handler, request, writer);
+    } else if constexpr (is_task_v<result_type>) {
+        if constexpr (std::is_void_v<task_value_t<result_type>>) {
+            co_await std::invoke(handler, request, writer);
+        } else {
+            static_assert(std::same_as<task_value_t<result_type>, response_message>,
+                          "FLASH-E100: a raw task must return void or response_message");
+            co_return co_await std::invoke(handler, request, writer);
+        }
+    } else if constexpr (std::same_as<std::remove_cvref_t<result_type>, response_message>) {
+        co_return std::invoke(handler, request, writer);
     } else {
         static_assert(std::is_void_v<result_type>,
                       "FLASH-E101: a raw handler must return void or flash::task<void>");

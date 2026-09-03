@@ -4,6 +4,9 @@
 #include <flash/binding/request.hpp>
 #include <flash/binding/scalar.hpp>
 #include <flash/config.hpp>
+#include <flash/context.hpp>
+#include <flash/dispatch.hpp>
+#include <flash/json/write.hpp>
 #include <flash/meta/reflection.hpp>
 #include <flash/problem.hpp>
 #include <flash/raw.hpp>

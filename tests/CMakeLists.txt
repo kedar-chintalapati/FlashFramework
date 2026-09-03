@@ -23,6 +23,11 @@ target_link_libraries(flash_scalar_binding_test PRIVATE flash::meta)
 flash_enable_warnings(flash_scalar_binding_test)
 add_test(NAME flash.scalar_binding COMMAND flash_scalar_binding_test)
 
+add_executable(flash_typed_dispatch_test unit/typed_dispatch_test.cpp)
+target_link_libraries(flash_typed_dispatch_test PRIVATE flash::flash)
+flash_enable_warnings(flash_typed_dispatch_test)
+add_test(NAME flash.typed_dispatch COMMAND flash_typed_dispatch_test)
+
 
 add_executable(flash_raw_server_test integration/raw_server_test.cpp)
 target_link_libraries(flash_raw_server_test PRIVATE flash::runtime)
@@ -57,6 +62,19 @@ flash_add_compile_fail_test(
     compile_fail/missing_route_annotation.cpp
     FLASH-E003
 )
+
+flash_add_compile_fail_test(
+    flash.compile_fail.unbound_path
+    compile_fail/unbound_path.cpp
+    FLASH-E302
+)
+
+flash_add_compile_fail_test(
+    flash.compile_fail.multiple_parameter_sources
+    compile_fail/multiple_parameter_sources.cpp
+    FLASH-E301
+)
+
 
 flash_add_compile_fail_test(
     flash.compile_fail.invalid_route

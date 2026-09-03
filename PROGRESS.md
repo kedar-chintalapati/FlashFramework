@@ -17,6 +17,7 @@ This file is an interruption-safe checkpoint for the Flash v0.1 implementation.
 - A bounded concurrency test drives eight simultaneous keep-alive clients through two I/O workers and verifies every response and handler invocation.
 - Consteval route parsing now normalizes literal, parameter, and catch-all segments; the generated API matcher implements deterministic specificity, captures, 404/405, implicit HEAD, automatic OPTIONS, and `Allow` calculation.
 - Strict scalar codecs cover booleans, integral/floating range checks, strings, reflected enum names, percent decoding, and bounded duplicate-aware query/header/cookie lookup.
+- Generated typed adapters infer path/query/body/context sources, honor explicit header/cookie/default metadata, bind into reflected parameter types, invoke functions directly through splicers, and map scalar/text/void results plus routing errors into HTTP responses.
 
 ## Milestones
 

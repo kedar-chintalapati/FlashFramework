@@ -142,9 +142,12 @@ task<void> raw_session(tcp::socket socket, const server_config& config, Handler&
         }
 
         if (error) {
+            const bool too_large = error == http::error::body_limit;
             auto response = transport_problem(
-                status::bad_request, "Malformed HTTP request",
-                "The request headers could not be parsed within the configured limits.");
+                too_large ? status::payload_too_large : status::bad_request,
+                too_large ? "Request body too large" : "Malformed HTTP request",
+                too_large ? "The request exceeds the configured body limit."
+                          : "The request headers could not be parsed within the configured limits.");
             auto wire = to_beast_response(std::move(response), 11, false);
             stream.expires_after(config.write_timeout);
             co_await http::async_write(

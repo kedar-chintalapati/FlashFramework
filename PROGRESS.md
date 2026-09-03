@@ -13,6 +13,7 @@ This file is an interruption-safe checkpoint for the Flash v0.1 implementation.
 - Expected-compile-failure tests verify stable Flash diagnostic identifiers for missing and duplicate route annotations.
 - Transport-neutral request views, validated response headers, finite server defaults, and RFC 9457-style problem serialization are implemented with unit coverage.
 - The first Beast/Asio coroutine server supports bounded header/body parsing, finite deadlines, sequential keep-alive, raw async handlers, validated responses, and cooperative stop.
+- Loopback integration coverage includes keep-alive reuse, connection close, 404 handling, oversized request rejection, and malformed-header rejection.
 
 ## Milestones
 

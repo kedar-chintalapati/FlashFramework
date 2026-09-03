@@ -1,0 +1,15 @@
+/build/
+/compile_commands.json
+/CMakeUserPresets.json
+*.exe
+*.o
+*.obj
+*.a
+*.dll
+*.pdb
+.cache/
+.idea/
+.vscode/settings.json
+Testing/
+benchmark-results/local/
+/C++-DEVELOPMENT-SETUP.md

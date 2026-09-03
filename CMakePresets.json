@@ -1,0 +1,70 @@
+{
+  "version": 10,
+  "cmakeMinimumRequired": {
+    "major": 4,
+    "minor": 4,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "C:/msys64/ucrt64/bin/g++.exe",
+        "CMAKE_CXX_STANDARD": "26",
+        "CMAKE_CXX_STANDARD_REQUIRED": "ON",
+        "CMAKE_CXX_EXTENSIONS": "OFF",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "debug",
+      "inherits": "base",
+      "toolchainFile": "${sourceDir}/build/conan/debug/conan_toolchain.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "FLASH_BUILD_TESTS": "ON",
+        "FLASH_BUILD_EXAMPLES": "ON"
+      }
+    },
+    {
+      "name": "release",
+      "inherits": "base",
+      "toolchainFile": "${sourceDir}/build/conan/release/conan_toolchain.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "FLASH_BUILD_TESTS": "ON",
+        "FLASH_BUILD_EXAMPLES": "ON"
+      }
+    },
+    {
+      "name": "native",
+      "inherits": "release",
+      "binaryDir": "${sourceDir}/build/native",
+      "cacheVariables": {
+        "FLASH_NATIVE_OPTIMIZATION": "ON",
+        "FLASH_BUILD_BENCHMARKS": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "debug", "configurePreset": "debug", "jobs": 2 },
+    { "name": "release", "configurePreset": "release", "jobs": 2 },
+    { "name": "native", "configurePreset": "native", "jobs": 2 }
+  ],
+  "testPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "release",
+      "configurePreset": "release",
+      "output": { "outputOnFailure": true }
+    }
+  ]
+}
+

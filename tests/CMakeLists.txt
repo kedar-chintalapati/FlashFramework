@@ -13,6 +13,13 @@ target_link_libraries(flash_http_types_test PRIVATE flash::runtime)
 flash_enable_warnings(flash_http_types_test)
 add_test(NAME flash.http_types COMMAND flash_http_types_test)
 
+add_executable(flash_raw_server_test integration/raw_server_test.cpp)
+target_link_libraries(flash_raw_server_test PRIVATE flash::runtime)
+flash_enable_warnings(flash_raw_server_test)
+add_test(NAME flash.raw_server COMMAND flash_raw_server_test)
+set_tests_properties(flash.raw_server PROPERTIES TIMEOUT 15)
+
+
 
 function(flash_add_compile_fail_test name source diagnostic)
     add_test(

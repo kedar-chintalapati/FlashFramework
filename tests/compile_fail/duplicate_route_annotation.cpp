@@ -1,4 +1,4 @@
-#include <flash/flash.hpp>
+#include <flash/meta/reflection.hpp>
 
 [[=flash::get("/duplicate"), =flash::post("/duplicate")]]
 constexpr int duplicate_route() {
@@ -6,4 +6,3 @@ constexpr int duplicate_route() {
 }
 
 constexpr auto must_fail = flash::meta::route_of<^^duplicate_route>();
-

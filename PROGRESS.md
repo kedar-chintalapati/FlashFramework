@@ -12,6 +12,7 @@ This file is an interruption-safe checkpoint for the Flash v0.1 implementation.
 - Route/source/validation annotation values, reflected namespace discovery, function-parameter and aggregate-field inspection, and direct reflected invocation pass in Debug and Release.
 - Expected-compile-failure tests verify stable Flash diagnostic identifiers for missing and duplicate route annotations.
 - Transport-neutral request views, validated response headers, finite server defaults, and RFC 9457-style problem serialization are implemented with unit coverage.
+- The first Beast/Asio coroutine server supports bounded header/body parsing, finite deadlines, sequential keep-alive, raw async handlers, validated responses, and cooperative stop.
 
 ## Milestones
 

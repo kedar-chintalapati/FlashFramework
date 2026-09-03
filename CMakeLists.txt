@@ -30,6 +30,10 @@ target_include_directories(flash_runtime
 target_link_libraries(flash_runtime PUBLIC boost::boost)
 target_compile_definitions(flash_runtime PUBLIC BOOST_ERROR_CODE_HEADER_ONLY)
 
+if(WIN32)
+    target_link_libraries(flash_runtime PUBLIC ws2_32 mswsock)
+endif()
+
 add_library(flash_meta INTERFACE)
 add_library(flash::meta ALIAS flash_meta)
 target_compile_features(flash_meta INTERFACE cxx_std_26)

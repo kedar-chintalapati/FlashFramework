@@ -19,6 +19,13 @@ flash_enable_warnings(flash_raw_server_test)
 add_test(NAME flash.raw_server COMMAND flash_raw_server_test)
 set_tests_properties(flash.raw_server PROPERTIES TIMEOUT 15)
 
+add_executable(flash_raw_concurrency_test integration/raw_concurrency_test.cpp)
+target_link_libraries(flash_raw_concurrency_test PRIVATE flash::runtime)
+flash_enable_warnings(flash_raw_concurrency_test)
+add_test(NAME flash.raw_concurrency COMMAND flash_raw_concurrency_test)
+set_tests_properties(flash.raw_concurrency PROPERTIES TIMEOUT 20)
+
+
 
 
 function(flash_add_compile_fail_test name source diagnostic)

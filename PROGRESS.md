@@ -14,11 +14,12 @@ This file is an interruption-safe checkpoint for the Flash v0.1 implementation.
 - Transport-neutral request views, validated response headers, finite server defaults, and RFC 9457-style problem serialization are implemented with unit coverage.
 - The first Beast/Asio coroutine server supports bounded header/body parsing, finite deadlines, sequential keep-alive, raw async handlers, validated responses, and cooperative stop.
 - Loopback integration coverage includes keep-alive reuse, connection close, 404 handling, oversized request rejection, and malformed-header rejection.
+- A bounded concurrency test drives eight simultaneous keep-alive clients through two I/O workers and verifies every response and handler invocation.
 
 ## Milestones
 
 - [x] M0: compiler and reflection spike
-- [ ] M1: HTTP runtime and raw endpoints
+- [x] M1: HTTP runtime and raw endpoints
 - [ ] M2: compile-time routes
 - [ ] M3: typed scalar binding
 - [ ] M4: reflected schema and JSON
@@ -28,9 +29,9 @@ This file is an interruption-safe checkpoint for the Flash v0.1 implementation.
 
 ## Immediate next work
 
-1. Implement bounded HTTP request/response types and the Beast runtime.
-2. Add a raw endpoint integration server with keep-alive and malformed-request coverage.
-3. Add the handwritten Beast baseline and initial allocation/latency instrumentation.
+1. Implement the consteval route grammar and normalized route shape.
+2. Reject route conflicts with stable compile diagnostics.
+3. Dispatch static, parameter, and catch-all routes with 404/405/HEAD/OPTIONS semantics.
 
 ## Safety and recovery notes
 

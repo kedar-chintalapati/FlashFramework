@@ -11,6 +11,7 @@ This file is an interruption-safe checkpoint for the Flash v0.1 implementation.
 - The proposed Boost 1.92 Conan recipe is not published by the configured Conan Center remote; the project therefore pins the newest available recipe, Boost 1.91.0.
 - Route/source/validation annotation values, reflected namespace discovery, function-parameter and aggregate-field inspection, and direct reflected invocation pass in Debug and Release.
 - Expected-compile-failure tests verify stable Flash diagnostic identifiers for missing and duplicate route annotations.
+- Transport-neutral request views, validated response headers, finite server defaults, and RFC 9457-style problem serialization are implemented with unit coverage.
 
 ## Milestones
 

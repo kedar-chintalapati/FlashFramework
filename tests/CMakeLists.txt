@@ -8,6 +8,12 @@ target_link_libraries(flash_reflection_test PRIVATE flash::flash)
 flash_enable_warnings(flash_reflection_test)
 add_test(NAME flash.reflection COMMAND flash_reflection_test)
 
+add_executable(flash_http_types_test unit/http_types_test.cpp)
+target_link_libraries(flash_http_types_test PRIVATE flash::runtime)
+flash_enable_warnings(flash_http_types_test)
+add_test(NAME flash.http_types COMMAND flash_http_types_test)
+
+
 function(flash_add_compile_fail_test name source diagnostic)
     add_test(
         NAME ${name}
@@ -32,4 +38,3 @@ flash_add_compile_fail_test(
     compile_fail/duplicate_route_annotation.cpp
     FLASH-E003
 )
-

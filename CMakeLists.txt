@@ -13,7 +13,10 @@ option(FLASH_BUILD_BENCHMARKS "Build Flash benchmarks" OFF)
 option(FLASH_WARNINGS_AS_ERRORS "Treat Flash warnings as errors" OFF)
 option(FLASH_NATIVE_OPTIMIZATION "Use local CPU tuning for benchmark targets" OFF)
 
+find_package(Boost 1.91 CONFIG REQUIRED)
+
 add_library(flash_runtime STATIC
+    src/runtime/errors.cpp
     src/runtime/version.cpp
 )
 add_library(flash::runtime ALIAS flash_runtime)
@@ -24,6 +27,8 @@ target_include_directories(flash_runtime
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
 )
+target_link_libraries(flash_runtime PUBLIC boost::boost)
+target_compile_definitions(flash_runtime PUBLIC BOOST_ERROR_CODE_HEADER_ONLY)
 
 add_library(flash_meta INTERFACE)
 add_library(flash::meta ALIAS flash_meta)
@@ -55,4 +60,3 @@ endif()
 if(FLASH_BUILD_BENCHMARKS)
     add_subdirectory(benchmarks)
 endif()
-

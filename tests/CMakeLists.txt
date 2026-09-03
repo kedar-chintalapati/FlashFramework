@@ -18,6 +18,12 @@ target_link_libraries(flash_routing_test PRIVATE flash::meta)
 flash_enable_warnings(flash_routing_test)
 add_test(NAME flash.routing COMMAND flash_routing_test)
 
+add_executable(flash_scalar_binding_test unit/scalar_binding_test.cpp)
+target_link_libraries(flash_scalar_binding_test PRIVATE flash::meta)
+flash_enable_warnings(flash_scalar_binding_test)
+add_test(NAME flash.scalar_binding COMMAND flash_scalar_binding_test)
+
+
 add_executable(flash_raw_server_test integration/raw_server_test.cpp)
 target_link_libraries(flash_raw_server_test PRIVATE flash::runtime)
 flash_enable_warnings(flash_raw_server_test)

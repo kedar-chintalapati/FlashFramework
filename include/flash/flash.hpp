@@ -1,6 +1,8 @@
 #pragma once
 
 #include <flash/annotations.hpp>
+#include <flash/binding/request.hpp>
+#include <flash/binding/scalar.hpp>
 #include <flash/config.hpp>
 #include <flash/meta/reflection.hpp>
 #include <flash/problem.hpp>

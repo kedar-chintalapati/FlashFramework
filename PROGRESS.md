@@ -16,6 +16,7 @@ This file is an interruption-safe checkpoint for the Flash v0.1 implementation.
 - Loopback integration coverage includes keep-alive reuse, connection close, 404 handling, oversized request rejection, and malformed-header rejection.
 - A bounded concurrency test drives eight simultaneous keep-alive clients through two I/O workers and verifies every response and handler invocation.
 - Consteval route parsing now normalizes literal, parameter, and catch-all segments; the generated API matcher implements deterministic specificity, captures, 404/405, implicit HEAD, automatic OPTIONS, and `Allow` calculation.
+- Strict scalar codecs cover booleans, integral/floating range checks, strings, reflected enum names, percent decoding, and bounded duplicate-aware query/header/cookie lookup.
 
 ## Milestones
 

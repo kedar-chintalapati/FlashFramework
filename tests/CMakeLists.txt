@@ -33,6 +33,11 @@ target_link_libraries(flash_typed_dispatch_test PRIVATE flash::flash)
 flash_enable_warnings(flash_typed_dispatch_test)
 add_test(NAME flash.typed_dispatch COMMAND flash_typed_dispatch_test)
 
+add_executable(flash_json_schema_test unit/json_schema_test.cpp)
+target_link_libraries(flash_json_schema_test PRIVATE flash::meta)
+flash_enable_warnings(flash_json_schema_test)
+add_test(NAME flash.json_schema COMMAND flash_json_schema_test)
+
 
 add_executable(flash_raw_server_test integration/raw_server_test.cpp)
 target_link_libraries(flash_raw_server_test PRIVATE flash::runtime)
@@ -105,4 +110,10 @@ flash_add_compile_fail_test(
     flash.compile_fail.duplicate_route
     compile_fail/duplicate_route_annotation.cpp
     FLASH-E003
+)
+
+flash_add_compile_fail_test(
+    flash.compile_fail.duplicate_json_alias
+    compile_fail/duplicate_json_alias.cpp
+    FLASH-E404
 )

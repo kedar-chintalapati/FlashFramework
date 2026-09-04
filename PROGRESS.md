@@ -2,6 +2,12 @@
 
 This file is an interruption-safe checkpoint for the Flash v0.1 implementation.
 
+## Recovery log
+
+- 2026-09-03: Resumed after a usage-limit interruption at clean commit `d97e841`.
+  No partial M4 files were present. The next coherent unit is reflected JSON schema
+  metadata, followed by the native cursor/codec and typed body integration.
+
 ## Current checkpoint
 
 - Repository initialized on `main` and connected to the empty private GitHub origin.
@@ -20,6 +26,11 @@ This file is an interruption-safe checkpoint for the Flash v0.1 implementation.
 - Generated typed adapters infer path/query/body/context sources, honor explicit header/cookie/default metadata, bind into reflected parameter types, invoke functions directly through splicers, and map scalar/text/void results plus routing errors into HTTP responses.
 - The reflected dispatcher is connected to the Beast runtime; the hello example and loopback integration test exercise real typed GET/DELETE routes and 422 errors over HTTP/1.1.
 - Allocation instrumentation verifies zero calls to global `new` across 10,000 successful generated route matches plus two integer path bindings; transport, coroutine, response, and user-code allocations are explicitly outside that test boundary.
+- Reflected JSON schema metadata now exposes aggregate field names, aliases, types,
+  constraints, and direct member splicers. Input/output schema validation diagnoses
+  invalid aggregates, inaccessible fields, ambiguous aliases, duplicate wire names,
+  and non-default-constructible request objects; focused Debug and compile-fail
+  coverage pass.
 
 ## Milestones
 
@@ -34,12 +45,14 @@ This file is an interruption-safe checkpoint for the Flash v0.1 implementation.
 
 ## Immediate next work
 
-1. Implement the native typed JSON cursor and reflected aggregate field access.
-2. Add strict duplicate/unknown/missing/null behavior, containers, aliases, and validation.
-3. Exercise a registration-free typed JSON POST endpoint over loopback HTTP.
+1. Implement the native typed JSON cursor and recursive value decoder.
+2. Add strict duplicate/unknown/missing/null behavior, containers, and validation.
+3. Extend the writer and exercise a registration-free typed JSON POST endpoint over loopback HTTP.
 
 ## Safety and recovery notes
 
 - Build presets intentionally cap Ninja at two jobs while the new reflection implementation is being characterized.
+- Git and compiler processes are checked between longer stages; no Git process was
+  left running at this recovery point.
 - Generated build output and local benchmark measurements remain untracked.
 - The project source of truth is the Git history plus this checkpoint; incomplete experimental work should not be pushed until it forms a coherent commit.

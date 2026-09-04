@@ -6,6 +6,7 @@
 
 #include <array>
 #include <cstdint>
+#include <expected>
 #include <future>
 #include <optional>
 #include <string>
@@ -15,6 +16,18 @@ enum class display_color {
     green,
     blue,
 };
+
+enum class order_error {
+    missing,
+    conflict,
+};
+
+template <>
+inline constexpr auto flash::error_map<order_error> = flash::errors(
+    flash::map<order_error::missing>(
+        flash::status::not_found, "order_missing", "Order not found"),
+    flash::map<order_error::conflict>(
+        flash::status::conflict, "order_conflict", "Order conflict"));
 
 struct CreateOrder {
     std::string sku;
@@ -68,6 +81,14 @@ void remove_widget(std::uint64_t id) {
 [[=flash::post("/orders")]]
 OrderReceipt create_order(CreateOrder order) {
     return {std::move(order.sku), order.quantity};
+}
+
+[[=flash::get("/orders/{id}")]]
+std::expected<OrderReceipt, order_error> get_order(std::uint32_t id) {
+    if (id == 0) {
+        return std::unexpected{order_error::missing};
+    }
+    return OrderReceipt{"part-42", id};
 }
 
 } // namespace typed_api
@@ -182,9 +203,22 @@ int main() {
     if (missing_content_type.status_code != flash::status::unsupported_media_type) {
         return 14;
     }
+    const auto expected_success = request(
+        flash::http_method::get, "/orders/3");
+    if (expected_success.status_code != flash::status::ok ||
+        expected_success.body != R"({"sku":"part-42","accepted":3})") {
+        return 15;
+    }
+    const auto expected_error = request(
+        flash::http_method::get, "/orders/0");
+    if (expected_error.status_code != flash::status::not_found ||
+        expected_error.content_type != "application/problem+json" ||
+        expected_error.body.find("order_missing") == std::string::npos) {
+        return 16;
+    }
 
     return request(flash::http_method::get, "/missing").status_code ==
                    flash::status::not_found
                ? 0
-               : 15;
+               : 17;
 }

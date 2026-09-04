@@ -39,6 +39,9 @@ This file is an interruption-safe checkpoint for the Flash v0.1 implementation.
   Media types are checked, multiple body parameters fail at compile time, and a
   typed POST returning another reflected aggregate passes direct and loopback tests.
 - All 20 tests pass in both Debug and Release at this checkpoint.
+- `std::expected<T, E>` and `std::expected<void, E>` response adaptation uses a
+  compile-time enum mapping. Missing or duplicate enum cases produce stable
+  diagnostics, and mapped failures use the common problem response schema.
 
 ## Milestones
 
@@ -53,9 +56,9 @@ This file is an interruption-safe checkpoint for the Flash v0.1 implementation.
 
 ## Immediate next work
 
-1. Add typed response mappings and consistent error policies.
-2. Generate deterministic OpenAPI 3.1.1 from the same route and schema metadata.
-3. Serve the OpenAPI document and a small documentation page without registration.
+1. Generate deterministic OpenAPI 3.1.1 from the route and schema metadata.
+2. Serve the OpenAPI document and a small documentation page without registration.
+3. Add an export executable, golden output, and validator coverage.
 
 ## Safety and recovery notes
 

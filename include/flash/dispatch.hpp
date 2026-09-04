@@ -1,6 +1,7 @@
 #pragma once
 
 #include <flash/binding/bind.hpp>
+#include <flash/error_mapping.hpp>
 #include <flash/json/write.hpp>
 #include <flash/meta/reflection.hpp>
 #include <flash/problem.hpp>
@@ -48,10 +49,51 @@ struct response_traits<response<Body>> {
     static constexpr bool value = true;
 };
 
+template <class>
+struct expected_traits {
+    static constexpr bool value = false;
+};
+
+template <class Result, class Error>
+struct expected_traits<std::expected<Result, Error>> {
+    static constexpr bool value = true;
+    using result_type = Result;
+    using error_type = Error;
+};
+
+[[nodiscard]] inline response_message adapt_void_response();
+
+template <class Error>
+[[nodiscard]] response_message domain_error_problem(const Error& error) {
+    const auto& mapping = mapped_error(error);
+    const auto code = mapping.code.view();
+    return make_problem_response({
+        .type = "https://flash.dev/problems/" + std::string{code},
+        .title = std::string{mapping.title.view()},
+        .status_code = mapping.status_code,
+        .detail = "The endpoint rejected the request.",
+        .instance = {},
+        .errors = {{{"handler", "result"}, std::string{code},
+                    "The endpoint returned a mapped domain error."}},
+        .request_id = {},
+    });
+}
+
 template <class Value>
 [[nodiscard]] response_message adapt_response(Value&& value) {
     using value_type = std::remove_cvref_t<Value>;
-    if constexpr (std::same_as<value_type, response_message>) {
+    if constexpr (expected_traits<value_type>::value) {
+        using traits = expected_traits<value_type>;
+        static_assert(error_mapping_validated<typename traits::error_type>);
+        if (!value) {
+            return domain_error_problem(value.error());
+        }
+        if constexpr (std::is_void_v<typename traits::result_type>) {
+            return adapt_void_response();
+        } else {
+            return adapt_response(*std::forward<Value>(value));
+        }
+    } else if constexpr (std::same_as<value_type, response_message>) {
         return std::forward<Value>(value);
     } else if constexpr (std::same_as<value_type, text>) {
         response_message response;

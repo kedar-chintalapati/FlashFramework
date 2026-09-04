@@ -6,6 +6,7 @@
 #include <flash/config.hpp>
 #include <flash/context.hpp>
 #include <flash/dispatch.hpp>
+#include <flash/error_mapping.hpp>
 #include <flash/json/write.hpp>
 #include <flash/json/schema.hpp>
 #include <flash/json/read.hpp>

@@ -20,6 +20,7 @@ enum class status : std::uint16_t {
     not_found = 404,
     method_not_allowed = 405,
     request_timeout = 408,
+    conflict = 409,
     payload_too_large = 413,
     unsupported_media_type = 415,
     unprocessable_content = 422,

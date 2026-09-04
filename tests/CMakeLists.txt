@@ -128,3 +128,9 @@ flash_add_compile_fail_test(
     compile_fail/multiple_body_parameters.cpp
     FLASH-E305
 )
+
+flash_add_compile_fail_test(
+    flash.compile_fail.incomplete_error_mapping
+    compile_fail/incomplete_error_mapping.cpp
+    FLASH-E502
+)

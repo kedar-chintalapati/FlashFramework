@@ -64,22 +64,27 @@ This file is an interruption safe checkpoint for the Flash v0.1 implementation.
   deadline. Header, body, and keepalive deadlines have loopback coverage. Session
   control is owned by each coroutine and serialized on a strand. All 35 Debug
   tests pass, including repeated shutdown and concurrency runs.
+- The blocking work example stores an Asio thread pool in application state and
+  awaits a task spawned on that pool. A unit test confirms that work runs on a
+  different thread and returns through the request coroutine. All 36 Debug and
+  Release tests pass. M6 is complete.
 
 ## Milestones
 
-- M0. Compiler and reflection spike
-- M1. HTTP runtime and raw endpoints
-- M2. Compile time routes
-- M3. Typed scalar binding
-- M4. Reflected schema and JSON
-- M5. Responses, errors, and OpenAPI
-- M6. Async, state, and middleware
-- M7. Performance hardening and experimental release
+- Complete. M0 compiler and reflection spike.
+- Complete. M1 HTTP runtime and raw endpoints.
+- Complete. M2 compile time routes.
+- Complete. M3 typed scalar binding.
+- Complete. M4 reflected schema and JSON.
+- Complete. M5 responses, errors, and OpenAPI.
+- Complete. M6 async, state, and middleware.
+- Active. M7 performance hardening and experimental release.
 
 ## Immediate next work
 
-1. Add the explicit blocking work example.
-2. Run the complete Release suite for M6.
+1. Complete the benchmark and allocation matrix.
+2. Measure compile time, compiler memory, and binary size.
+3. Add CI, package installation, release documentation, and security tests.
 
 ## Safety and recovery notes
 

@@ -384,17 +384,21 @@ void append_component(std::string& output) {
 
 template <class... Types>
 void append_components(std::string& output, type_list<Types...>) {
-    bool first = true;
-    const auto append_one = [&]<class Object>() {
-        if (!first) {
-            output.push_back(',');
-        }
-        first = false;
-        json::detail::append_escaped_string(output, component_name<Object>());
-        output.push_back(':');
-        append_component<Object>(output);
-    };
-    (append_one.template operator()<Types>(), ...);
+    if constexpr (sizeof...(Types) > 0) {
+        bool first = true;
+        const auto append_one = [&]<class Object>() {
+            if (!first) {
+                output.push_back(',');
+            }
+            first = false;
+            json::detail::append_escaped_string(output, component_name<Object>());
+            output.push_back(':');
+            append_component<Object>(output);
+        };
+        (append_one.template operator()<Types>(), ...);
+    } else {
+        static_cast<void>(output);
+    }
 }
 
 } // namespace detail

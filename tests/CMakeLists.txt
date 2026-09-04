@@ -58,6 +58,11 @@ target_link_libraries(flash_middleware_test PRIVATE flash::flash)
 flash_enable_warnings(flash_middleware_test)
 add_test(NAME flash.middleware COMMAND flash_middleware_test)
 
+add_executable(flash_blocking_executor_test unit/blocking_executor_test.cpp)
+target_link_libraries(flash_blocking_executor_test PRIVATE flash::runtime)
+flash_enable_warnings(flash_blocking_executor_test)
+add_test(NAME flash.blocking_executor COMMAND flash_blocking_executor_test)
+
 
 add_executable(flash_raw_server_test integration/raw_server_test.cpp)
 target_link_libraries(flash_raw_server_test PRIVATE flash::runtime)

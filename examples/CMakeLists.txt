@@ -14,6 +14,10 @@ add_executable(flash_openapi_export openapi/main.cpp)
 target_link_libraries(flash_openapi_export PRIVATE flash::flash)
 flash_enable_warnings(flash_openapi_export)
 
+add_executable(flash_blocking_example blocking/main.cpp)
+target_link_libraries(flash_blocking_example PRIVATE flash::flash)
+flash_enable_warnings(flash_blocking_example)
+
 add_custom_target(
     flash_export_openapi
     COMMAND flash_openapi_export ${CMAKE_CURRENT_BINARY_DIR}/openapi.json

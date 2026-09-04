@@ -180,12 +180,13 @@ template <class Value>
     });
 }
 
-template <std::meta::info Function, std::size_t... Index>
+template <std::meta::info Function, class StateRegistry, std::size_t... Index>
 [[nodiscard]] auto bind_arguments(const request_view& request,
                                   const routing::route_match& route,
+                                  StateRegistry& states,
                                   std::index_sequence<Index...>) {
     return std::tuple{
-        binding::bind_parameter<Function, Index>(request, route)...};
+        binding::bind_parameter<Function, Index>(request, route, states)...};
 }
 
 template <std::size_t Index = 0, class Tuple>
@@ -218,12 +219,13 @@ decltype(auto) call_endpoint(Tuple& values, std::index_sequence<Index...>) {
         forward_bound<Function, Index>(*std::get<Index>(values))...);
 }
 
-template <std::meta::info Function>
+template <std::meta::info Function, class StateRegistry>
 task<response_message> invoke_endpoint(const request_view& request,
-                                       const routing::route_match& route) {
+                                       const routing::route_match& route,
+                                       StateRegistry& states) {
     static_assert(binding::endpoint_binding_validated<Function>);
     constexpr auto indices = std::make_index_sequence<endpoint_arity<Function>>{};
-    auto arguments = bind_arguments<Function>(request, route, indices);
+    auto arguments = bind_arguments<Function>(request, route, states, indices);
     if (const auto* error = first_binding_error(arguments)) {
         co_return binding_problem(*error, request);
     }
@@ -244,10 +246,11 @@ task<response_message> invoke_endpoint(const request_view& request,
     }
 }
 
-template <std::meta::info Namespace, std::size_t Index = 0>
+template <std::meta::info Namespace, class StateRegistry, std::size_t Index = 0>
 task<response_message> dispatch_endpoint(std::size_t endpoint_index,
                                          const request_view& request,
-                                         const routing::route_match& route) {
+                                         const routing::route_match& route,
+                                         StateRegistry& states) {
     if constexpr (Index == meta::endpoint_count_v<Namespace>) {
         co_return dispatch_problem(
             status::internal_server_error, "Internal server error",
@@ -255,25 +258,24 @@ task<response_message> dispatch_endpoint(std::size_t endpoint_index,
     } else {
         if (endpoint_index == Index) {
             co_return co_await invoke_endpoint<endpoint_reflection<Namespace, Index>>(
-                request, route);
+                request, route, states);
         }
-        co_return co_await dispatch_endpoint<Namespace, Index + 1>(
-            endpoint_index, request, route);
+        co_return co_await dispatch_endpoint<Namespace, StateRegistry, Index + 1>(
+            endpoint_index, request, route, states);
     }
 }
 
-} // namespace detail
-
-template <std::meta::info Namespace>
-task<response_message> dispatch(const request_view& request) {
+template <std::meta::info Namespace, class StateRegistry>
+task<response_message> dispatch_with_state(const request_view& request,
+                                           StateRegistry& states) {
     const auto matched = routing::match_api<Namespace>(request.method(), request.path());
     if (matched.outcome == routing::match_outcome::not_found) {
-        co_return detail::dispatch_problem(
+        co_return dispatch_problem(
             status::not_found, "Not Found", "No route matches the request path.",
             std::string{request.target()});
     }
     if (matched.outcome == routing::match_outcome::method_not_allowed) {
-        auto response = detail::dispatch_problem(
+        auto response = dispatch_problem(
             status::method_not_allowed, "Method Not Allowed",
             "The path exists, but not for this HTTP method.",
             std::string{request.target()});
@@ -288,26 +290,50 @@ task<response_message> dispatch(const request_view& request) {
         co_return response;
     }
 
-    auto response = co_await detail::dispatch_endpoint<Namespace>(
-        matched.endpoint_index, request, matched.route);
+    auto response = co_await dispatch_endpoint<Namespace>(
+        matched.endpoint_index, request, matched.route, states);
     if (request.method() == http_method::head) {
         response.body.clear();
     }
     co_return response;
 }
 
+} // namespace detail
+
+template <std::meta::info Namespace>
+task<response_message> dispatch(const request_view& request) {
+    detail::state_registry<> states;
+    co_return co_await detail::dispatch_with_state<Namespace>(request, states);
+}
+
+template <std::meta::info Namespace, class First, class... Rest>
+task<response_message> dispatch(const request_view& request,
+                                First& first,
+                                Rest&... rest) {
+    detail::state_registry<First, Rest...> states{first, rest...};
+    co_return co_await detail::dispatch_with_state<Namespace>(request, states);
+}
+
 template <std::meta::info Namespace,
           openapi::documentation_mode Documentation =
-              openapi::documentation_mode::development>
+              openapi::documentation_mode::development,
+          class... State>
 struct reflected_handler {
+    reflected_handler() requires(sizeof...(State) == 0) = default;
+
+    explicit reflected_handler(State&... state) noexcept : states_{state...} {}
+
     task<response_message> operator()(raw_request_view request,
-                                      raw_response_writer&) const {
+                                      raw_response_writer&) {
         if (auto response =
                 openapi::documentation_response<Namespace, Documentation>(request)) {
             co_return std::move(*response);
         }
-        co_return co_await dispatch<Namespace>(request);
+        co_return co_await detail::dispatch_with_state<Namespace>(request, states_);
     }
+
+private:
+    detail::state_registry<State...> states_;
 };
 
 template <std::meta::info Namespace,
@@ -316,6 +342,30 @@ template <std::meta::info Namespace,
 int serve(server_config config, std::stop_token stop_token = {}) {
     return serve_raw(
         std::move(config), reflected_handler<Namespace, Documentation>{}, stop_token);
+}
+
+template <std::meta::info Namespace,
+          openapi::documentation_mode Documentation =
+              openapi::documentation_mode::development,
+          class First,
+          class... Rest>
+    requires(!std::same_as<std::remove_cvref_t<First>, std::stop_token> &&
+             (!std::same_as<std::remove_cvref_t<Rest>, std::stop_token> && ...))
+int serve(server_config config, First& first, Rest&... rest) {
+    return serve_raw(
+        std::move(config),
+        reflected_handler<Namespace, Documentation, First, Rest...>{first, rest...});
+}
+
+template <std::meta::info Namespace,
+          openapi::documentation_mode Documentation =
+              openapi::documentation_mode::development,
+          class... State>
+    requires(sizeof...(State) > 0)
+int serve(server_config config, std::stop_token stop_token, State&... state) {
+    return serve_raw(
+        std::move(config),
+        reflected_handler<Namespace, Documentation, State...>{state...}, stop_token);
 }
 
 } // namespace flash

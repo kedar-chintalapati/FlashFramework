@@ -168,3 +168,15 @@ flash_add_compile_fail_test(
     compile_fail/openapi_operation_collision.cpp
     FLASH-E605
 )
+
+flash_add_compile_fail_test(
+    flash.compile_fail.unregistered_state
+    compile_fail/unregistered_state.cpp
+    FLASH-E307
+)
+
+flash_add_compile_fail_test(
+    flash.compile_fail.duplicate_state
+    compile_fail/duplicate_state.cpp
+    FLASH-E308
+)

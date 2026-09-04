@@ -2,6 +2,9 @@
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/post.hpp>
+#include <boost/asio/this_coro.hpp>
+#include <boost/asio/use_awaitable.hpp>
 #include <boost/beast/core/flat_buffer.hpp>
 #include <boost/beast/core/tcp_stream.hpp>
 #include <boost/beast/http.hpp>
@@ -18,6 +21,11 @@ struct CreateItem {
 struct StoredItem {
     std::string name;
     std::uint32_t quantity{};
+};
+
+struct Services {
+    int base{40};
+    int uses{};
 };
 
 namespace typed_server_api {
@@ -42,6 +50,14 @@ StoredItem create(CreateItem item) {
     return {std::move(item.name), item.quantity};
 }
 
+[[=flash::get("/async-state/{value}")]]
+flash::task<int> async_state_value(int value, flash::state<Services>& services) {
+    const auto executor = co_await boost::asio::this_coro::executor;
+    co_await boost::asio::post(executor, boost::asio::use_awaitable);
+    ++services->uses;
+    co_return services->base + value;
+}
+
 } // namespace typed_server_api
 
 namespace asio = boost::asio;
@@ -57,8 +73,13 @@ int main() {
     config.body_timeout = std::chrono::seconds{2};
     config.write_timeout = std::chrono::seconds{2};
 
+    Services services;
     flash::raw_server server{
-        config, flash::reflected_handler<^^typed_server_api>{}};
+        config,
+        flash::reflected_handler<
+            ^^typed_server_api,
+            flash::openapi::documentation_mode::development,
+            Services>{services}};
     server.start();
 
     asio::io_context client_context;
@@ -97,6 +118,7 @@ int main() {
         R"({"name":"widget","quantity":0})", "application/json");
     const auto openapi = exchange(http::verb::get, "/openapi.json", true);
     const auto docs = exchange(http::verb::get, "/docs", true);
+    const auto state = exchange(http::verb::get, "/async-state/2", true);
     const auto erased = exchange(http::verb::delete_, "/items/7", false);
 
     server.stop();
@@ -137,6 +159,10 @@ int main() {
     }
     if (erased.result() != http::status::no_content || !erased.body().empty()) {
         return 8;
+    }
+    if (state.result() != http::status::ok || state.body() != "42" ||
+        services.uses != 1) {
+        return 9;
     }
     return 0;
 }

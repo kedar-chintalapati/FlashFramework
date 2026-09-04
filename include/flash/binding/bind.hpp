@@ -86,9 +86,11 @@ parse_decoded_scalar(std::string_view raw, bool plus_as_space) {
     return parse_scalar<Value>(decoded->view());
 }
 
-template <std::meta::info Function, std::size_t Index>
+template <std::meta::info Function, std::size_t Index, class StateRegistry>
 [[nodiscard]] std::expected<parameter_storage_t<Function, Index>, binding_error>
-bind_parameter(const request_view& request, const routing::route_match& match) {
+bind_parameter(const request_view& request,
+               const routing::route_match& match,
+               StateRegistry& states) {
     using storage_type = parameter_storage_t<Function, Index>;
     constexpr auto source = parameter_source<Function, Index>();
     constexpr auto name = wire_name<Function, Index>();
@@ -120,8 +122,8 @@ bind_parameter(const request_view& request, const routing::route_match& match) {
         }
         return std::move(*parsed);
     } else if constexpr (source == source_kind::state) {
-        static_assert(std::is_void_v<storage_type>,
-                      "FLASH-E304: this parameter source is not enabled by the current dispatcher");
+        using state_type = typename storage_type::value_type;
+        return storage_type{states.template get<state_type>()};
     } else {
         std::expected<std::optional<std::string_view>, scalar_error> raw =
             std::optional<std::string_view>{};
@@ -186,6 +188,13 @@ bind_parameter(const request_view& request, const routing::route_match& match) {
             return std::move(*parsed);
         }
     }
+}
+
+template <std::meta::info Function, std::size_t Index>
+[[nodiscard]] std::expected<parameter_storage_t<Function, Index>, binding_error>
+bind_parameter(const request_view& request, const routing::route_match& match) {
+    flash::detail::state_registry<> states;
+    return bind_parameter<Function, Index>(request, match, states);
 }
 
 } // namespace flash::binding

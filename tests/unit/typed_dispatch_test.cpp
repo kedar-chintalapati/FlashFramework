@@ -2,6 +2,8 @@
 
 #include <boost/asio/co_spawn.hpp>
 #include <boost/asio/io_context.hpp>
+#include <boost/asio/post.hpp>
+#include <boost/asio/this_coro.hpp>
 #include <boost/asio/use_future.hpp>
 
 #include <array>
@@ -37,6 +39,11 @@ struct CreateOrder {
 struct OrderReceipt {
     std::string sku;
     std::uint32_t accepted{};
+};
+
+struct Services {
+    int offset{40};
+    int uses{};
 };
 
 namespace typed_api {
@@ -94,6 +101,28 @@ std::expected<OrderReceipt, order_error> get_order(std::uint32_t id) {
 
 } // namespace typed_api
 
+namespace state_api {
+
+[[=flash::get("/state/{value}")]]
+int state_value(int value, flash::state<Services>& services) {
+    ++services->uses;
+    return services->offset + value;
+}
+
+[[=flash::get("/async-state/{value}")]]
+flash::task<std::string> async_state_value(
+    int value,
+    flash::state<Services>& services,
+    flash::request_context& context) {
+    const auto target = context.request.target();
+    const auto executor = co_await boost::asio::this_coro::executor;
+    co_await boost::asio::post(executor, boost::asio::use_awaitable);
+    ++services->uses;
+    co_return std::to_string(services->offset + value) + ":" + std::string{target};
+}
+
+} // namespace state_api
+
 flash::response_message run(flash::task<flash::response_message> operation) {
     boost::asio::io_context context;
     auto result = boost::asio::co_spawn(
@@ -109,6 +138,14 @@ flash::response_message request(
     std::string_view body = {}) {
     return run(flash::dispatch<^^typed_api>(
         flash::request_view{method, target, headers, body, false}));
+}
+
+flash::response_message state_request(
+    flash::http_method method,
+    std::string_view target,
+    Services& services) {
+    return run(flash::dispatch<^^state_api>(
+        flash::request_view{method, target, {}, {}, false}, services));
 }
 
 int main() {
@@ -223,8 +260,22 @@ int main() {
         return 17;
     }
 
+    Services services;
+    const auto state_result = state_request(
+        flash::http_method::get, "/state/2", services);
+    if (state_result.status_code != flash::status::ok ||
+        state_result.body != "42" || services.uses != 1) {
+        return 18;
+    }
+    const auto async_result = state_request(
+        flash::http_method::get, "/async-state/3", services);
+    if (async_result.status_code != flash::status::ok ||
+        async_result.body != R"("43:/async-state/3")" || services.uses != 2) {
+        return 19;
+    }
+
     return request(flash::http_method::get, "/missing").status_code ==
                    flash::status::not_found
                ? 0
-               : 18;
+               : 20;
 }

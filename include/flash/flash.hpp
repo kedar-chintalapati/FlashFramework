@@ -11,6 +11,7 @@
 #include <flash/json/schema.hpp>
 #include <flash/json/read.hpp>
 #include <flash/meta/reflection.hpp>
+#include <flash/middleware.hpp>
 #include <flash/openapi/schema.hpp>
 #include <flash/openapi/document.hpp>
 #include <flash/openapi/docs.hpp>

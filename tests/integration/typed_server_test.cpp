@@ -11,7 +11,9 @@
 
 #include <chrono>
 #include <cstdint>
+#include <stdexcept>
 #include <string>
+#include <vector>
 
 struct CreateItem {
     std::string name;
@@ -58,12 +60,28 @@ flash::task<int> async_state_value(int value, flash::state<Services>& services) 
     co_return services->base + value;
 }
 
+[[=flash::get("/context-id")]]
+flash::text context_id(flash::request_context& context) {
+    return {context.request_id};
+}
+
+[[=flash::get("/failure")]]
+int failure() {
+    throw std::runtime_error{"private failure text"};
+}
+
 } // namespace typed_server_api
 
 namespace asio = boost::asio;
 namespace beast = boost::beast;
 namespace http = beast::http;
 using tcp = asio::ip::tcp;
+
+struct ObservedLog {
+    std::string target;
+    flash::status status_code;
+    std::string request_id;
+};
 
 int main() {
     flash::server_config config;
@@ -74,12 +92,27 @@ int main() {
     config.write_timeout = std::chrono::seconds{2};
 
     Services services;
+    std::vector<ObservedLog> logs;
+    using Middleware = flash::application<
+        flash::middleware::request_id,
+        flash::middleware::access_log,
+        flash::middleware::recover_exceptions>;
+    Middleware middleware{
+        flash::middleware::request_id{},
+        flash::middleware::access_log{
+            [&logs](const flash::middleware::access_log_entry& entry) {
+                logs.push_back({
+                    std::string{entry.target}, entry.status_code,
+                    std::string{entry.request_id}});
+            }},
+        flash::middleware::recover_exceptions{}};
     flash::raw_server server{
         config,
-        flash::reflected_handler<
+        flash::application_handler<
             ^^typed_server_api,
+            Middleware,
             flash::openapi::documentation_mode::development,
-            Services>{services}};
+            Services>{std::move(middleware), services}};
     server.start();
 
     asio::io_context client_context;
@@ -92,12 +125,16 @@ int main() {
                                              std::string target,
                                              bool keep_alive,
                                              std::string body = {},
-                                             std::string content_type = {}) {
+                                             std::string content_type = {},
+                                             std::string request_id = {}) {
         http::request<http::string_body> request{method, std::move(target), 11};
         request.set(http::field::host, "127.0.0.1");
         request.body() = std::move(body);
         if (!content_type.empty()) {
             request.set(http::field::content_type, content_type);
+        }
+        if (!request_id.empty()) {
+            request.set("X-Request-ID", request_id);
         }
         request.prepare_payload();
         request.keep_alive(keep_alive);
@@ -119,6 +156,10 @@ int main() {
     const auto openapi = exchange(http::verb::get, "/openapi.json", true);
     const auto docs = exchange(http::verb::get, "/docs", true);
     const auto state = exchange(http::verb::get, "/async-state/2", true);
+    const auto context = exchange(
+        http::verb::get, "/context-id", true, {}, {}, "request-42");
+    const auto failure = exchange(
+        http::verb::get, "/failure", true, {}, {}, "failure-42");
     const auto erased = exchange(http::verb::delete_, "/items/7", false);
 
     server.stop();
@@ -163,6 +204,31 @@ int main() {
     if (state.result() != http::status::ok || state.body() != "42" ||
         services.uses != 1) {
         return 9;
+    }
+    if (context.result() != http::status::ok || context.body() != "request-42" ||
+        context["X-Request-ID"] != "request-42") {
+        return 10;
+    }
+    if (failure.result() != http::status::internal_server_error ||
+        failure[http::field::content_type] != "application/problem+json" ||
+        failure["X-Request-ID"] != "failure-42" ||
+        failure.body().find("failure-42") == std::string::npos ||
+        failure.body().find("private failure text") != std::string::npos) {
+        return 11;
+    }
+    if (health["X-Request-ID"].size() != 32 || logs.size() != 11) {
+        return 12;
+    }
+    bool failure_logged = false;
+    for (const auto& entry : logs) {
+        if (entry.target == "/failure" &&
+            entry.status_code == flash::status::internal_server_error &&
+            entry.request_id == "failure-42") {
+            failure_logged = true;
+        }
+    }
+    if (!failure_logged) {
+        return 13;
     }
     return 0;
 }

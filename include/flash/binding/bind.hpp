@@ -90,14 +90,16 @@ template <std::meta::info Function, std::size_t Index, class StateRegistry>
 [[nodiscard]] std::expected<parameter_storage_t<Function, Index>, binding_error>
 bind_parameter(const request_view& request,
                const routing::route_match& match,
-               StateRegistry& states) {
+               StateRegistry& states,
+               std::string_view request_id = {}) {
     using storage_type = parameter_storage_t<Function, Index>;
     constexpr auto source = parameter_source<Function, Index>();
     constexpr auto name = wire_name<Function, Index>();
 
     if constexpr (source == source_kind::context) {
         if constexpr (std::same_as<storage_type, request_context>) {
-            return request_context{.request = request, .request_id = {}};
+            return request_context{
+                .request = request, .request_id = std::string{request_id}};
         } else if constexpr (std::same_as<storage_type, raw_request_view>) {
             return request;
         }

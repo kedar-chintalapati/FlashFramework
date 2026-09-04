@@ -53,6 +53,11 @@ target_link_libraries(flash_openapi_document_test PRIVATE flash::flash)
 flash_enable_warnings(flash_openapi_document_test)
 add_test(NAME flash.openapi_document COMMAND flash_openapi_document_test)
 
+add_executable(flash_middleware_test unit/middleware_test.cpp)
+target_link_libraries(flash_middleware_test PRIVATE flash::flash)
+flash_enable_warnings(flash_middleware_test)
+add_test(NAME flash.middleware COMMAND flash_middleware_test)
+
 
 add_executable(flash_raw_server_test integration/raw_server_test.cpp)
 target_link_libraries(flash_raw_server_test PRIVATE flash::runtime)
@@ -179,4 +184,10 @@ flash_add_compile_fail_test(
     flash.compile_fail.duplicate_state
     compile_fail/duplicate_state.cpp
     FLASH-E308
+)
+
+flash_add_compile_fail_test(
+    flash.compile_fail.invalid_middleware
+    compile_fail/invalid_middleware.cpp
+    FLASH-E700
 )

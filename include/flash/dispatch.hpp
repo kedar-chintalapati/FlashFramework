@@ -4,6 +4,7 @@
 #include <flash/error_mapping.hpp>
 #include <flash/json/write.hpp>
 #include <flash/meta/reflection.hpp>
+#include <flash/middleware.hpp>
 #include <flash/openapi/docs.hpp>
 #include <flash/problem.hpp>
 #include <flash/raw.hpp>
@@ -65,7 +66,8 @@ struct expected_traits<std::expected<Result, Error>> {
 [[nodiscard]] inline response_message adapt_void_response();
 
 template <class Error>
-[[nodiscard]] response_message domain_error_problem(const Error& error) {
+[[nodiscard]] response_message domain_error_problem(
+    const Error& error, std::string_view request_id) {
     const auto& mapping = mapped_error(error);
     const auto code = mapping.code.view();
     return make_problem_response({
@@ -76,23 +78,24 @@ template <class Error>
         .instance = {},
         .errors = {{{"handler", "result"}, std::string{code},
                     "The endpoint returned a mapped domain error."}},
-        .request_id = {},
+        .request_id = std::string{request_id},
     });
 }
 
 template <class Value>
-[[nodiscard]] response_message adapt_response(Value&& value) {
+[[nodiscard]] response_message adapt_response(
+    Value&& value, std::string_view request_id = {}) {
     using value_type = std::remove_cvref_t<Value>;
     if constexpr (expected_traits<value_type>::value) {
         using traits = expected_traits<value_type>;
         static_assert(error_mapping_validated<typename traits::error_type>);
         if (!value) {
-            return domain_error_problem(value.error());
+            return domain_error_problem(value.error(), request_id);
         }
         if constexpr (std::is_void_v<typename traits::result_type>) {
             return adapt_void_response();
         } else {
-            return adapt_response(*std::forward<Value>(value));
+            return adapt_response(*std::forward<Value>(value), request_id);
         }
     } else if constexpr (std::same_as<value_type, response_message>) {
         return std::forward<Value>(value);
@@ -148,7 +151,9 @@ template <class Value>
 }
 
 [[nodiscard]] inline response_message binding_problem(
-    const binding::binding_error& error, const request_view& request) {
+    const binding::binding_error& error,
+    const request_view& request,
+    std::string_view request_id) {
     const bool media_type_error = error.status_code == status::unsupported_media_type;
     return make_problem_response({
         .type = media_type_error
@@ -161,14 +166,15 @@ template <class Value>
                       : "Request parameter could not be bound to the endpoint signature.",
         .instance = std::string{request.target()},
         .errors = {{{source_name(error.source), error.name}, error.code, error.message}},
-        .request_id = {},
+        .request_id = std::string{request_id},
     });
 }
 
 [[nodiscard]] inline response_message dispatch_problem(status code,
                                                        std::string title,
                                                        std::string message,
-                                                       std::string instance) {
+                                                       std::string instance,
+                                                       std::string_view request_id = {}) {
     return make_problem_response({
         .type = "https://flash.dev/problems/routing",
         .title = std::move(title),
@@ -176,7 +182,7 @@ template <class Value>
         .detail = std::move(message),
         .instance = std::move(instance),
         .errors = {},
-        .request_id = {},
+        .request_id = std::string{request_id},
     });
 }
 
@@ -184,9 +190,12 @@ template <std::meta::info Function, class StateRegistry, std::size_t... Index>
 [[nodiscard]] auto bind_arguments(const request_view& request,
                                   const routing::route_match& route,
                                   StateRegistry& states,
+                                  std::string_view request_id,
                                   std::index_sequence<Index...>) {
+    static_cast<void>(request_id);
     return std::tuple{
-        binding::bind_parameter<Function, Index>(request, route, states)...};
+        binding::bind_parameter<Function, Index>(
+            request, route, states, request_id)...};
 }
 
 template <std::size_t Index = 0, class Tuple>
@@ -222,12 +231,14 @@ decltype(auto) call_endpoint(Tuple& values, std::index_sequence<Index...>) {
 template <std::meta::info Function, class StateRegistry>
 task<response_message> invoke_endpoint(const request_view& request,
                                        const routing::route_match& route,
-                                       StateRegistry& states) {
+                                       StateRegistry& states,
+                                       std::string_view request_id) {
     static_assert(binding::endpoint_binding_validated<Function>);
     constexpr auto indices = std::make_index_sequence<endpoint_arity<Function>>{};
-    auto arguments = bind_arguments<Function>(request, route, states, indices);
+    auto arguments = bind_arguments<Function>(
+        request, route, states, request_id, indices);
     if (const auto* error = first_binding_error(arguments)) {
-        co_return binding_problem(*error, request);
+        co_return binding_problem(*error, request, request_id);
     }
 
     using result_type = decltype(call_endpoint<Function>(arguments, indices));
@@ -236,13 +247,15 @@ task<response_message> invoke_endpoint(const request_view& request,
             co_await call_endpoint<Function>(arguments, indices);
             co_return adapt_void_response();
         } else {
-            co_return adapt_response(co_await call_endpoint<Function>(arguments, indices));
+            co_return adapt_response(
+                co_await call_endpoint<Function>(arguments, indices), request_id);
         }
     } else if constexpr (std::is_void_v<result_type>) {
         call_endpoint<Function>(arguments, indices);
         co_return adapt_void_response();
     } else {
-        co_return adapt_response(call_endpoint<Function>(arguments, indices));
+        co_return adapt_response(
+            call_endpoint<Function>(arguments, indices), request_id);
     }
 }
 
@@ -250,35 +263,38 @@ template <std::meta::info Namespace, class StateRegistry, std::size_t Index = 0>
 task<response_message> dispatch_endpoint(std::size_t endpoint_index,
                                          const request_view& request,
                                          const routing::route_match& route,
-                                         StateRegistry& states) {
+                                         StateRegistry& states,
+                                         std::string_view request_id) {
     if constexpr (Index == meta::endpoint_count_v<Namespace>) {
         co_return dispatch_problem(
             status::internal_server_error, "Internal server error",
-            "The generated endpoint index is invalid.", std::string{request.target()});
+            "The generated endpoint index is invalid.", std::string{request.target()},
+            request_id);
     } else {
         if (endpoint_index == Index) {
             co_return co_await invoke_endpoint<endpoint_reflection<Namespace, Index>>(
-                request, route, states);
+                request, route, states, request_id);
         }
         co_return co_await dispatch_endpoint<Namespace, StateRegistry, Index + 1>(
-            endpoint_index, request, route, states);
+            endpoint_index, request, route, states, request_id);
     }
 }
 
 template <std::meta::info Namespace, class StateRegistry>
 task<response_message> dispatch_with_state(const request_view& request,
-                                           StateRegistry& states) {
+                                           StateRegistry& states,
+                                           std::string_view request_id = {}) {
     const auto matched = routing::match_api<Namespace>(request.method(), request.path());
     if (matched.outcome == routing::match_outcome::not_found) {
         co_return dispatch_problem(
             status::not_found, "Not Found", "No route matches the request path.",
-            std::string{request.target()});
+            std::string{request.target()}, request_id);
     }
     if (matched.outcome == routing::match_outcome::method_not_allowed) {
         auto response = dispatch_problem(
             status::method_not_allowed, "Method Not Allowed",
             "The path exists, but not for this HTTP method.",
-            std::string{request.target()});
+            std::string{request.target()}, request_id);
         response.set_header("Allow", routing::allow_header(matched.allow_mask));
         co_return response;
     }
@@ -291,7 +307,7 @@ task<response_message> dispatch_with_state(const request_view& request,
     }
 
     auto response = co_await dispatch_endpoint<Namespace>(
-        matched.endpoint_index, request, matched.route, states);
+        matched.endpoint_index, request, matched.route, states, request_id);
     if (request.method() == http_method::head) {
         response.body.clear();
     }
@@ -337,6 +353,38 @@ private:
 };
 
 template <std::meta::info Namespace,
+          class Application,
+          openapi::documentation_mode Documentation =
+              openapi::documentation_mode::development,
+          class... State>
+struct application_handler {
+    static_assert(is_application_v<Application>,
+                  "FLASH-E701: an application handler requires flash::application");
+
+    explicit application_handler(Application application, State&... state)
+        : application_{std::move(application)}, states_{state...} {}
+
+    task<response_message> operator()(raw_request_view request,
+                                      raw_response_writer&) {
+        request_context context{.request = request, .request_id = {}};
+        auto final = [this, &context]() -> task<response_message> {
+            if (auto response =
+                    openapi::documentation_response<Namespace, Documentation>(
+                        context.request)) {
+                co_return std::move(*response);
+            }
+            co_return co_await detail::dispatch_with_state<Namespace>(
+                context.request, states_, context.request_id);
+        };
+        co_return co_await application_(context, final);
+    }
+
+private:
+    Application application_;
+    detail::state_registry<State...> states_;
+};
+
+template <std::meta::info Namespace,
           openapi::documentation_mode Documentation =
               openapi::documentation_mode::development>
 int serve(server_config config, std::stop_token stop_token = {}) {
@@ -350,7 +398,9 @@ template <std::meta::info Namespace,
           class First,
           class... Rest>
     requires(!std::same_as<std::remove_cvref_t<First>, std::stop_token> &&
-             (!std::same_as<std::remove_cvref_t<Rest>, std::stop_token> && ...))
+             !is_application_v<std::remove_cvref_t<First>> &&
+             (!std::same_as<std::remove_cvref_t<Rest>, std::stop_token> && ...) &&
+             (!is_application_v<std::remove_cvref_t<Rest>> && ...))
 int serve(server_config config, First& first, Rest&... rest) {
     return serve_raw(
         std::move(config),
@@ -361,11 +411,44 @@ template <std::meta::info Namespace,
           openapi::documentation_mode Documentation =
               openapi::documentation_mode::development,
           class... State>
-    requires(sizeof...(State) > 0)
+    requires(sizeof...(State) > 0 &&
+             (!is_application_v<std::remove_cvref_t<State>> && ...))
 int serve(server_config config, std::stop_token stop_token, State&... state) {
     return serve_raw(
         std::move(config),
         reflected_handler<Namespace, Documentation, State...>{state...}, stop_token);
+}
+
+template <std::meta::info Namespace,
+          openapi::documentation_mode Documentation =
+              openapi::documentation_mode::development,
+          class Application,
+          class... State>
+    requires is_application_v<std::remove_cvref_t<Application>>
+int serve(server_config config, Application application, State&... state) {
+    using application_type = std::remove_cvref_t<Application>;
+    return serve_raw(
+        std::move(config),
+        application_handler<Namespace, application_type, Documentation, State...>{
+            std::move(application), state...});
+}
+
+template <std::meta::info Namespace,
+          openapi::documentation_mode Documentation =
+              openapi::documentation_mode::development,
+          class Application,
+          class... State>
+    requires is_application_v<std::remove_cvref_t<Application>>
+int serve(server_config config,
+          std::stop_token stop_token,
+          Application application,
+          State&... state) {
+    using application_type = std::remove_cvref_t<Application>;
+    return serve_raw(
+        std::move(config),
+        application_handler<Namespace, application_type, Documentation, State...>{
+            std::move(application), state...},
+        stop_token);
 }
 
 } // namespace flash

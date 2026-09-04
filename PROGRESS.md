@@ -55,6 +55,10 @@ This file is an interruption safe checkpoint for the Flash v0.1 implementation.
   Missing and duplicate registrations have stable compile diagnostics. Direct and
   loopback tests cover state access across an Asio suspension. All 31 Debug tests
   pass at this checkpoint.
+- A typed middleware chain now wraps dispatch. Built in request ID, access log,
+  and exception recovery middleware pass unit and loopback tests. Request IDs
+  reach endpoint context, response headers, problem bodies, and log records.
+  Invalid middleware return types produce `FLASH-E700`. All 33 Debug tests pass.
 
 ## Milestones
 
@@ -69,8 +73,7 @@ This file is an interruption safe checkpoint for the Flash v0.1 implementation.
 
 ## Immediate next work
 
-1. Add middleware with request IDs, access logging hooks, and recovery behavior.
-2. Improve cancellation and graceful shutdown tests.
+1. Improve cancellation and graceful shutdown tests.
 
 ## Safety and recovery notes
 

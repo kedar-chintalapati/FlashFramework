@@ -55,7 +55,7 @@ std::uint64_t percentile(
 int main(int argument_count, char** arguments) {
     if (argument_count < 6) {
         std::cerr << "usage: flash_benchmark_load port method target connections requests"
-                     " [body] [content_type] [expected_status]\n";
+                     " [body] [content_type] [expected_status] [warmup_requests]\n";
         return 2;
     }
 
@@ -88,6 +88,11 @@ int main(int argument_count, char** arguments) {
     if (argument_count > 8 && !parse_size(arguments[8], expected_status)) {
         return 2;
     }
+    std::size_t warmup_requests = 20;
+    if (argument_count > 9 &&
+        (!parse_size(arguments[9], warmup_requests) || warmup_requests > 10'000)) {
+        return 2;
+    }
 
     std::vector<std::vector<std::uint64_t>> thread_latencies(connection_count);
     std::vector<std::thread> clients;
@@ -107,20 +112,22 @@ int main(int argument_count, char** arguments) {
                     "127.0.0.1", std::to_string(port_value)));
                 beast::flat_buffer buffer;
 
-                http::request<http::string_body> warmup{method, target, 11};
-                warmup.set(http::field::host, "127.0.0.1");
-                if (!content_type.empty()) {
-                    warmup.set(http::field::content_type, content_type);
-                }
-                warmup.body() = body;
-                warmup.prepare_payload();
-                warmup.keep_alive(true);
-                stream.expires_after(std::chrono::seconds{10});
-                http::write(stream, warmup);
-                http::response<http::string_body> warmup_response;
-                http::read(stream, buffer, warmup_response);
-                if (warmup_response.result_int() != expected_status) {
-                    errors.fetch_add(1, std::memory_order_relaxed);
+                for (std::size_t index = 0; index < warmup_requests; ++index) {
+                    http::request<http::string_body> warmup{method, target, 11};
+                    warmup.set(http::field::host, "127.0.0.1");
+                    if (!content_type.empty()) {
+                        warmup.set(http::field::content_type, content_type);
+                    }
+                    warmup.body() = body;
+                    warmup.prepare_payload();
+                    warmup.keep_alive(true);
+                    stream.expires_after(std::chrono::seconds{10});
+                    http::write(stream, warmup);
+                    http::response<http::string_body> warmup_response;
+                    http::read(stream, buffer, warmup_response);
+                    if (warmup_response.result_int() != expected_status) {
+                        errors.fetch_add(1, std::memory_order_relaxed);
+                    }
                 }
 
                 auto& latencies = thread_latencies[client_index];
@@ -185,6 +192,7 @@ int main(int argument_count, char** arguments) {
 
     std::cout << "{\"target\":\"" << target << "\",\"connections\":"
               << connection_count << ",\"requests\":" << latencies.size()
+              << ",\"warmup_requests_per_connection\":" << warmup_requests
               << ",\"seconds\":" << elapsed.count() << ",\"requests_per_second\":"
               << throughput << ",\"p50_ns\":" << percentile(latencies, 500)
               << ",\"p90_ns\":" << percentile(latencies, 900)

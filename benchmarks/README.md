@@ -41,8 +41,8 @@ Asio timer wait. Both JSON implementations use the Flash JSON codec. The manual
 server uses handwritten route and argument handling.
 
 `flash_benchmark_load` opens one keepalive connection per client thread. It runs
-one unmeasured request on each connection, then records throughput, errors, and
-p50, p90, p99, and p99.9 latency.
+configurable unmeasured requests on each connection, then records throughput,
+errors, and p50, p90, p99, and p99.9 latency.
 
 Run the matrix from PowerShell.
 
@@ -52,6 +52,7 @@ Run the matrix from PowerShell.
 
 The script builds the native preset with two jobs. It tests 1, 8, 32, and 128
 connections with one and two server workers. JSON bodies cover about 100 bytes,
-1 KiB, and 64 KiB. Results, core measurements, allocation counts, and machine
-metadata are written below `build\benchmark-results` and remain local until they
-are reviewed for publication.
+1 KiB, and 64 KiB. Each end to end case has 20 warmup requests per connection and
+three measured trials. The result includes server CPU time. Results, core
+measurements, allocation counts, and machine metadata are written below
+`build\benchmark-results` and remain local until they are reviewed for publication.

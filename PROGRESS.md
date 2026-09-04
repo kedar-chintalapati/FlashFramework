@@ -79,6 +79,9 @@ This file is an interruption safe checkpoint for the Flash v0.1 implementation.
   global allocation executable reports eight named boundaries. Route plus two
   integer bindings, fixed object JSON read, and reused buffer JSON write each
   recorded zero allocations over 10,000 measured operations.
+- End to end measurements now default to three trials after 20 warmup requests
+  per connection. Records include trial identity and server CPU time. A focused
+  smoke run verified all output fields and all 32 server cases with zero errors.
 
 ## Milestones
 

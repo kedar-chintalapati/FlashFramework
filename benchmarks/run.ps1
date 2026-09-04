@@ -5,6 +5,10 @@ param(
     [int[]]$Connections = @(1, 8, 32, 128),
     [ValidateRange(1, 128)]
     [int[]]$WorkerCounts = @(1, 2),
+    [ValidateRange(1, 20)]
+    [int]$Trials = 3,
+    [ValidateRange(0, 10000)]
+    [int]$WarmupRequests = 20,
     [ValidateRange(1, 65534)]
     [int]$BasePort = 19082,
     [string]$OutputDirectory = ""
@@ -40,6 +44,8 @@ try {
         compiler = $compiler
         build_preset = "native"
         worker_counts = $WorkerCounts
+        trials = $Trials
+        warmup_requests_per_connection = $WarmupRequests
         requests_per_connection = $RequestsPerConnection
         connections = $Connections
     }
@@ -102,39 +108,53 @@ try {
                 -WindowStyle Hidden
             try {
                 Start-Sleep -Milliseconds 500
-                foreach ($connectionCount in $Connections) {
-                    foreach ($workload in $workloads) {
-                        $requestCount = [Math]::Max(
-                            5, [Math]::Floor($RequestsPerConnection / $workload.divisor))
-                        $arguments = @(
-                            [string]$server.port,
-                            $workload.method,
-                            $workload.target,
-                            [string]$connectionCount,
-                            [string]$requestCount,
-                            $workload.body,
-                            $workload.content_type,
-                            [string]$workload.status
-                        )
-                        $raw = & $clientPath @arguments
-                        if ($LASTEXITCODE -ne 0) {
-                            throw "$($server.name) $($workload.name) failed"
+                for ($trial = 1; $trial -le $Trials; ++$trial) {
+                    foreach ($connectionCount in $Connections) {
+                        foreach ($workload in $workloads) {
+                            $requestCount = [Math]::Max(
+                                5, [Math]::Floor($RequestsPerConnection / $workload.divisor))
+                            $arguments = @(
+                                [string]$server.port,
+                                $workload.method,
+                                $workload.target,
+                                [string]$connectionCount,
+                                [string]$requestCount,
+                                $workload.body,
+                                $workload.content_type,
+                                [string]$workload.status,
+                                [string]$WarmupRequests
+                            )
+                            $serverProcess.Refresh()
+                            $cpuStart = $serverProcess.TotalProcessorTime.TotalSeconds
+                            $raw = & $clientPath @arguments
+                            $serverProcess.Refresh()
+                            $serverCpuSeconds =
+                                $serverProcess.TotalProcessorTime.TotalSeconds - $cpuStart
+                            if ($LASTEXITCODE -ne 0) {
+                                throw "$($server.name) $($workload.name) failed"
+                            }
+                            $measurement = $raw | ConvertFrom-Json
+                            $measurement | Add-Member `
+                                -NotePropertyName "server" `
+                                -NotePropertyValue $server.name
+                            $measurement | Add-Member `
+                                -NotePropertyName "workload" `
+                                -NotePropertyValue $workload.name
+                            $measurement | Add-Member `
+                                -NotePropertyName "workers" `
+                                -NotePropertyValue $workerCount
+                            $measurement | Add-Member `
+                                -NotePropertyName "trial" `
+                                -NotePropertyValue $trial
+                            $measurement | Add-Member `
+                                -NotePropertyName "server_cpu_seconds" `
+                                -NotePropertyValue $serverCpuSeconds
+                            [IO.File]::AppendAllText(
+                                $resultPath,
+                                ($measurement | ConvertTo-Json -Compress) + [Environment]::NewLine)
+                            Write-Output `
+                                "$($server.name) $($workload.name) workers=$workerCount c=$connectionCount trial=$trial complete"
                         }
-                        $measurement = $raw | ConvertFrom-Json
-                        $measurement | Add-Member `
-                            -NotePropertyName "server" `
-                            -NotePropertyValue $server.name
-                        $measurement | Add-Member `
-                            -NotePropertyName "workload" `
-                            -NotePropertyValue $workload.name
-                        $measurement | Add-Member `
-                            -NotePropertyName "workers" `
-                            -NotePropertyValue $workerCount
-                        [IO.File]::AppendAllText(
-                            $resultPath,
-                            ($measurement | ConvertTo-Json -Compress) + [Environment]::NewLine)
-                        Write-Output `
-                            "$($server.name) $($workload.name) workers=$workerCount c=$connectionCount complete"
                     }
                 }
             }

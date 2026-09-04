@@ -1,7 +1,11 @@
 param(
+    [ValidateRange(1, 1000000)]
     [int]$RequestsPerConnection = 200,
+    [ValidateRange(1, 512)]
     [int[]]$Connections = @(1, 8, 32, 128),
-    [int]$Workers = 2,
+    [ValidateRange(1, 128)]
+    [int[]]$WorkerCounts = @(1, 2),
+    [ValidateRange(1, 65534)]
     [int]$BasePort = 19082,
     [string]$OutputDirectory = ""
 )
@@ -35,7 +39,7 @@ try {
         logical_processors = $processor.NumberOfLogicalProcessors
         compiler = $compiler
         build_preset = "native"
-        workers = $Workers
+        worker_counts = $WorkerCounts
         requests_per_connection = $RequestsPerConnection
         connections = $Connections
     }
@@ -69,54 +73,76 @@ try {
     $resultPath = Join-Path $OutputDirectory "results.jsonl"
     [IO.File]::WriteAllText($resultPath, "")
 
-    foreach ($server in $servers) {
-        $serverPath = Join-Path $repository "build\native\benchmarks\$($server.executable)"
-        $serverProcess = Start-Process `
-            -FilePath $serverPath `
-            -ArgumentList @([string]$server.port, [string]$Workers) `
-            -PassThru `
-            -WindowStyle Hidden
-        try {
-            Start-Sleep -Milliseconds 500
-            foreach ($connectionCount in $Connections) {
-                foreach ($workload in $workloads) {
-                    $requestCount = [Math]::Max(
-                        5, [Math]::Floor($RequestsPerConnection / $workload.divisor))
-                    $arguments = @(
-                        [string]$server.port,
-                        $workload.method,
-                        $workload.target,
-                        [string]$connectionCount,
-                        [string]$requestCount,
-                        $workload.body,
-                        $workload.content_type,
-                        [string]$workload.status
-                    )
-                    $raw = & $clientPath @arguments
-                    if ($LASTEXITCODE -ne 0) {
-                        throw "$($server.name) $($workload.name) failed"
+    $corePath = Join-Path $repository "build\native\benchmarks\flash_benchmark_core.exe"
+    $coreResults = & $corePath
+    if ($LASTEXITCODE -ne 0) {
+        throw "core benchmark failed"
+    }
+    [IO.File]::WriteAllLines(
+        (Join-Path $OutputDirectory "core.jsonl"),
+        [string[]]$coreResults)
+
+    $allocationPath = Join-Path `
+        $repository "build\native\benchmarks\flash_benchmark_allocations.exe"
+    $allocationResults = & $allocationPath
+    if ($LASTEXITCODE -ne 0) {
+        throw "allocation benchmark failed"
+    }
+    [IO.File]::WriteAllLines(
+        (Join-Path $OutputDirectory "allocations.jsonl"),
+        [string[]]$allocationResults)
+
+    foreach ($workerCount in $WorkerCounts) {
+        foreach ($server in $servers) {
+            $serverPath = Join-Path $repository "build\native\benchmarks\$($server.executable)"
+            $serverProcess = Start-Process `
+                -FilePath $serverPath `
+                -ArgumentList @([string]$server.port, [string]$workerCount) `
+                -PassThru `
+                -WindowStyle Hidden
+            try {
+                Start-Sleep -Milliseconds 500
+                foreach ($connectionCount in $Connections) {
+                    foreach ($workload in $workloads) {
+                        $requestCount = [Math]::Max(
+                            5, [Math]::Floor($RequestsPerConnection / $workload.divisor))
+                        $arguments = @(
+                            [string]$server.port,
+                            $workload.method,
+                            $workload.target,
+                            [string]$connectionCount,
+                            [string]$requestCount,
+                            $workload.body,
+                            $workload.content_type,
+                            [string]$workload.status
+                        )
+                        $raw = & $clientPath @arguments
+                        if ($LASTEXITCODE -ne 0) {
+                            throw "$($server.name) $($workload.name) failed"
+                        }
+                        $measurement = $raw | ConvertFrom-Json
+                        $measurement | Add-Member `
+                            -NotePropertyName "server" `
+                            -NotePropertyValue $server.name
+                        $measurement | Add-Member `
+                            -NotePropertyName "workload" `
+                            -NotePropertyValue $workload.name
+                        $measurement | Add-Member `
+                            -NotePropertyName "workers" `
+                            -NotePropertyValue $workerCount
+                        [IO.File]::AppendAllText(
+                            $resultPath,
+                            ($measurement | ConvertTo-Json -Compress) + [Environment]::NewLine)
+                        Write-Output `
+                            "$($server.name) $($workload.name) workers=$workerCount c=$connectionCount complete"
                     }
-                    $measurement = $raw | ConvertFrom-Json
-                    $measurement | Add-Member `
-                        -NotePropertyName "server" `
-                        -NotePropertyValue $server.name
-                    $measurement | Add-Member `
-                        -NotePropertyName "workload" `
-                        -NotePropertyValue $workload.name
-                    $measurement | Add-Member `
-                        -NotePropertyName "workers" `
-                        -NotePropertyValue $Workers
-                    [IO.File]::AppendAllText(
-                        $resultPath,
-                        ($measurement | ConvertTo-Json -Compress) + [Environment]::NewLine)
-                    Write-Output "$($server.name) $($workload.name) c=$connectionCount complete"
                 }
             }
-        }
-        finally {
-            if (!$serverProcess.HasExited) {
-                Stop-Process -Id $serverProcess.Id
-                $serverProcess.WaitForExit(5000) | Out-Null
+            finally {
+                if (!$serverProcess.HasExited) {
+                    Stop-Process -Id $serverProcess.Id
+                    $serverProcess.WaitForExit(5000) | Out-Null
+                }
             }
         }
     }

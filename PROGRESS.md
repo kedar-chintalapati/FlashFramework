@@ -73,6 +73,12 @@ This file is an interruption safe checkpoint for the Flash v0.1 implementation.
   echo at three body sizes, validation failure, and an Asio timer wait. The load
   client records throughput, latency percentiles, and errors. A small smoke run
   passed all 16 server and workload combinations with zero errors.
+- The benchmark matrix now covers one and two server workers. A second smoke run
+  passed all 32 combinations. Core microbenchmarks emit 22 JSON records for
+  routing, binding, query, JSON, validation, error, and header work. A separate
+  global allocation executable reports eight named boundaries. Route plus two
+  integer bindings, fixed object JSON read, and reused buffer JSON write each
+  recorded zero allocations over 10,000 measured operations.
 
 ## Milestones
 

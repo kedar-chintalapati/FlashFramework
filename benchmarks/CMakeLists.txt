@@ -29,6 +29,14 @@ add_executable(flash_benchmark_request_view micro/request_view.cpp)
 target_link_libraries(flash_benchmark_request_view PRIVATE flash::runtime flash_benchmark_options)
 flash_enable_warnings(flash_benchmark_request_view)
 
+add_executable(flash_benchmark_core micro/core.cpp)
+target_link_libraries(flash_benchmark_core PRIVATE flash::flash flash_benchmark_options)
+flash_enable_warnings(flash_benchmark_core)
+
+add_executable(flash_benchmark_allocations micro/allocations.cpp)
+target_link_libraries(flash_benchmark_allocations PRIVATE flash::flash flash_benchmark_options)
+flash_enable_warnings(flash_benchmark_allocations)
+
 add_executable(flash_benchmark_load client/load.cpp)
 target_link_libraries(flash_benchmark_load PRIVATE flash_benchmark_options)
 flash_enable_warnings(flash_benchmark_load)

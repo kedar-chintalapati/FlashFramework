@@ -47,7 +47,8 @@ int add(int a, int b) {
 }
 
 [[=flash::get("/search")]]
-flash::text search(std::string q, std::optional<int> limit) {
+flash::text search([[=flash::min_length(2)]] std::string q,
+                   std::optional<int> limit) {
     return {q + ":" + (limit ? std::to_string(*limit) : "none")};
 }
 
@@ -157,26 +158,31 @@ int main() {
         missing.body.find("missing_parameter") == std::string::npos) {
         return 7;
     }
+    const auto constrained = request(flash::http_method::get, "/search?q=x");
+    if (constrained.status_code != flash::status::unprocessable_content ||
+        constrained.body.find("constraint_failed") == std::string::npos) {
+        return 8;
+    }
 
     const auto deleted = request(flash::http_method::delete_, "/widgets/7");
     if (deleted.status_code != flash::status::no_content || !deleted.body.empty()) {
-        return 8;
+        return 9;
     }
 
     const auto wrong_method = request(flash::http_method::post, "/add/1/2");
     if (wrong_method.status_code != flash::status::method_not_allowed ||
         wrong_method.headers.empty() || wrong_method.headers[0].value != "GET, HEAD, OPTIONS") {
-        return 9;
+        return 10;
     }
 
     const auto options = request(flash::http_method::options, "/add/1/2");
     if (options.status_code != flash::status::no_content || options.headers.empty()) {
-        return 10;
+        return 11;
     }
 
     const auto head = request(flash::http_method::head, "/add/1/2");
     if (head.status_code != flash::status::ok || !head.body.empty()) {
-        return 11;
+        return 12;
     }
 
     constexpr std::array json_headers{
@@ -187,7 +193,7 @@ int main() {
         R"({"sku":"part-42","quantity":4})");
     if (created.status_code != flash::status::ok ||
         created.body != R"({"sku":"part-42","accepted":4})") {
-        return 12;
+        return 13;
     }
     const auto invalid_body = request(
         flash::http_method::post, "/orders", json_headers,
@@ -195,30 +201,30 @@ int main() {
     if (invalid_body.status_code != flash::status::unprocessable_content ||
         invalid_body.body.find("constraint_failed") == std::string::npos ||
         invalid_body.body.find("$.quantity") == std::string::npos) {
-        return 13;
+        return 14;
     }
     const auto missing_content_type = request(
         flash::http_method::post, "/orders", {},
         R"({"sku":"part-42","quantity":4})");
     if (missing_content_type.status_code != flash::status::unsupported_media_type) {
-        return 14;
+        return 15;
     }
     const auto expected_success = request(
         flash::http_method::get, "/orders/3");
     if (expected_success.status_code != flash::status::ok ||
         expected_success.body != R"({"sku":"part-42","accepted":3})") {
-        return 15;
+        return 16;
     }
     const auto expected_error = request(
         flash::http_method::get, "/orders/0");
     if (expected_error.status_code != flash::status::not_found ||
         expected_error.content_type != "application/problem+json" ||
         expected_error.body.find("order_missing") == std::string::npos) {
-        return 16;
+        return 17;
     }
 
     return request(flash::http_method::get, "/missing").status_code ==
                    flash::status::not_found
                ? 0
-               : 17;
+               : 18;
 }

@@ -95,6 +95,8 @@ int main() {
     const auto invalid_body = exchange(
         http::verb::post, "/items", true,
         R"({"name":"widget","quantity":0})", "application/json");
+    const auto openapi = exchange(http::verb::get, "/openapi.json", true);
+    const auto docs = exchange(http::verb::get, "/docs", true);
     const auto erased = exchange(http::verb::delete_, "/items/7", false);
 
     server.stop();
@@ -122,8 +124,19 @@ int main() {
         invalid_body.body().find("constraint_failed") == std::string::npos) {
         return 5;
     }
-    if (erased.result() != http::status::no_content || !erased.body().empty()) {
+    if (openapi.result() != http::status::ok ||
+        openapi[http::field::content_type] != "application/json" ||
+        openapi.body().find("\"openapi\":\"3.1.1\"") == std::string::npos ||
+        openapi.body().find("\"/items\"") == std::string::npos) {
         return 6;
+    }
+    if (docs.result() != http::status::ok ||
+        docs[http::field::content_type] != "text/html; charset=utf-8" ||
+        docs.body().find("/openapi.json") == std::string::npos) {
+        return 7;
+    }
+    if (erased.result() != http::status::no_content || !erased.body().empty()) {
+        return 8;
     }
     return 0;
 }

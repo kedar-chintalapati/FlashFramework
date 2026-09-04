@@ -4,6 +4,7 @@
 #include <flash/error_mapping.hpp>
 #include <flash/json/write.hpp>
 #include <flash/meta/reflection.hpp>
+#include <flash/openapi/docs.hpp>
 #include <flash/problem.hpp>
 #include <flash/raw.hpp>
 #include <flash/response.hpp>
@@ -295,18 +296,26 @@ task<response_message> dispatch(const request_view& request) {
     co_return response;
 }
 
-template <std::meta::info Namespace>
+template <std::meta::info Namespace,
+          openapi::documentation_mode Documentation =
+              openapi::documentation_mode::development>
 struct reflected_handler {
     task<response_message> operator()(raw_request_view request,
                                       raw_response_writer&) const {
+        if (auto response =
+                openapi::documentation_response<Namespace, Documentation>(request)) {
+            co_return std::move(*response);
+        }
         co_return co_await dispatch<Namespace>(request);
     }
 };
 
-template <std::meta::info Namespace>
+template <std::meta::info Namespace,
+          openapi::documentation_mode Documentation =
+              openapi::documentation_mode::development>
 int serve(server_config config, std::stop_token stop_token = {}) {
     return serve_raw(
-        std::move(config), reflected_handler<Namespace>{}, stop_token);
+        std::move(config), reflected_handler<Namespace, Documentation>{}, stop_token);
 }
 
 } // namespace flash

@@ -107,6 +107,22 @@ inline constexpr std::size_t default_annotation_count =
         .size();
 
 template <std::meta::info Function, std::size_t Index>
+inline constexpr std::size_t parameter_constraint_count =
+    std::meta::annotations_of_with_type(
+        meta::parameter_at<Function, Index>(), ^^constraint_annotation)
+        .size();
+
+template <std::meta::info Function, std::size_t Index, std::size_t ConstraintIndex>
+[[nodiscard]] consteval constraint_annotation parameter_constraint() {
+    static_assert(ConstraintIndex < parameter_constraint_count<Function, Index>,
+                  "FLASH-E306: parameter constraint index is out of range");
+    return std::meta::extract<constraint_annotation>(
+        std::meta::annotations_of_with_type(
+            meta::parameter_at<Function, Index>(),
+            ^^constraint_annotation)[ConstraintIndex]);
+}
+
+template <std::meta::info Function, std::size_t Index>
 [[nodiscard]] consteval bool route_has_wire_name() {
     constexpr const auto& route = routing::compiled_route<Function>;
     constexpr auto name = wire_name<Function, Index>();

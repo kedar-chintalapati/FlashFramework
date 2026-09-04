@@ -14,12 +14,17 @@ if(NOT DEFINED FLASH_EXPECTED_DIAGNOSTIC)
     message(FATAL_ERROR "FLASH_EXPECTED_DIAGNOSTIC is required")
 endif()
 
+set(flash_include_arguments "-I${FLASH_TEST_INCLUDE}")
+if(DEFINED FLASH_TEST_BOOST_INCLUDE)
+    list(APPEND flash_include_arguments "-I${FLASH_TEST_BOOST_INCLUDE}")
+endif()
+
 execute_process(
     COMMAND
         "${FLASH_TEST_COMPILER}"
         -std=c++26
         -freflection
-        -I${FLASH_TEST_INCLUDE}
+        ${flash_include_arguments}
         -fsyntax-only
         "${FLASH_TEST_SOURCE}"
     RESULT_VARIABLE compile_result

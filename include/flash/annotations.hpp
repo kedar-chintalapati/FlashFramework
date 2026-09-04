@@ -61,6 +61,10 @@ struct name_annotation {
     detail::fixed_string value{};
 };
 
+struct schema_name_annotation {
+    detail::fixed_string value{};
+};
+
 struct description_annotation {
     detail::fixed_string value{};
 };
@@ -180,6 +184,11 @@ consteval name_annotation name(const char (&value)[Size]) {
 }
 
 template <std::size_t Size>
+consteval schema_name_annotation schema_name(const char (&value)[Size]) {
+    return {detail::fixed_string{value}};
+}
+
+template <std::size_t Size>
 consteval description_annotation description(const char (&value)[Size]) {
     return {detail::fixed_string{value}};
 }
@@ -197,4 +206,3 @@ consteval auto default_value(Value&& value) {
 }
 
 } // namespace flash
-

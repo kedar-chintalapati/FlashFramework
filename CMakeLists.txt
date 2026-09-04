@@ -53,6 +53,7 @@ include(cmake/FlashWarnings.cmake)
 flash_enable_warnings(flash_runtime)
 
 if(FLASH_BUILD_TESTS)
+    find_package(Python3 3.10 COMPONENTS Interpreter REQUIRED)
     enable_testing()
     add_subdirectory(tests)
 endif()

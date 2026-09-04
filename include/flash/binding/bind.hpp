@@ -39,6 +39,26 @@ struct binding_error {
            media_type.find('/') != std::string_view::npos;
 }
 
+template <std::meta::info Function,
+          std::size_t Index,
+          class Value,
+          std::size_t ConstraintIndex = 0>
+[[nodiscard]] std::expected<void, scalar_error>
+validate_parameter_constraints(const Value& value) {
+    if constexpr (ConstraintIndex == parameter_constraint_count<Function, Index>) {
+        return {};
+    } else {
+        auto checked = json::detail::validate_constraint(
+            value, parameter_constraint<Function, Index, ConstraintIndex>(), {}, 0);
+        if (!checked) {
+            return std::unexpected{scalar_error{
+                checked.error().code, checked.error().message}};
+        }
+        return validate_parameter_constraints<
+            Function, Index, Value, ConstraintIndex + 1>(value);
+    }
+}
+
 [[nodiscard]] inline std::optional<std::string_view>
 find_path_value(const routing::route_match& match, std::string_view name) noexcept {
     for (std::size_t index = 0; index < match.capture_count; ++index) {
@@ -143,12 +163,25 @@ bind_parameter(const request_view& request, const routing::route_match& match) {
                 return std::unexpected{binding_error{
                     source, std::string{name}, parsed.error().code, parsed.error().message}};
             }
-            return storage_type{std::move(*parsed)};
+            storage_type result{std::move(*parsed)};
+            auto checked = validate_parameter_constraints<Function, Index>(result);
+            if (!checked) {
+                return std::unexpected{binding_error{
+                    source, std::string{name}, checked.error().code,
+                    checked.error().message}};
+            }
+            return result;
         } else {
             auto parsed = parse_decoded_scalar<storage_type>(**raw, plus_as_space);
             if (!parsed) {
                 return std::unexpected{binding_error{
                     source, std::string{name}, parsed.error().code, parsed.error().message}};
+            }
+            auto checked = validate_parameter_constraints<Function, Index>(*parsed);
+            if (!checked) {
+                return std::unexpected{binding_error{
+                    source, std::string{name}, checked.error().code,
+                    checked.error().message}};
             }
             return std::move(*parsed);
         }

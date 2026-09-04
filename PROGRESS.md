@@ -42,6 +42,15 @@ This file is an interruption-safe checkpoint for the Flash v0.1 implementation.
 - `std::expected<T, E>` and `std::expected<void, E>` response adaptation uses a
   compile-time enum mapping. Missing or duplicate enum cases produce stable
   diagnostics, and mapped failures use the common problem response schema.
+- OpenAPI 3.1.1 generation now uses route, binding, response, error, and JSON
+  schema metadata shared with runtime behavior. Output ordering is deterministic,
+  recursive object schemas use component references, and component and operation
+  name collisions produce compile-time diagnostics.
+- Development handlers serve `/openapi.json` and an embedded `/docs` page. Both
+  routes can be removed through a compile-time mode. A build target exports the
+  document, and tests compare exact bytes with a golden file.
+- The exported document passes the pinned `openapi-spec-validator` 0.9.0 in an
+  isolated local environment. All 29 configured Debug and Release tests pass.
 
 ## Milestones
 
@@ -50,15 +59,15 @@ This file is an interruption-safe checkpoint for the Flash v0.1 implementation.
 - [x] M2: compile-time routes
 - [x] M3: typed scalar binding
 - [x] M4: reflected schema and JSON
-- [ ] M5: responses, errors, and OpenAPI
+- [x] M5: responses, errors, and OpenAPI
 - [ ] M6: async, state, and middleware
 - [ ] M7: performance hardening and experimental release
 
 ## Immediate next work
 
-1. Generate deterministic OpenAPI 3.1.1 from the route and schema metadata.
-2. Serve the OpenAPI document and a small documentation page without registration.
-3. Add an export executable, golden output, and validator coverage.
+1. Add state injection and sync and awaitable handler coverage.
+2. Add middleware with request IDs, access logging hooks, and recovery behavior.
+3. Improve cancellation and graceful shutdown tests.
 
 ## Safety and recovery notes
 

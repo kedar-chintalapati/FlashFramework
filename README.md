@@ -1,16 +1,21 @@
 # Flash
 
-Flash is an experimental C++26 REST framework exploring how much of a modern web framework can disappear before the program runs.
+Flash is an experimental C++26 REST framework. Static reflection provides route,
+binding, validation, JSON, and OpenAPI metadata before the server starts.
 
-The project is under active construction. Its reference environment is native Windows with MSYS2 UCRT64 GCC 16.2, CMake 4.4, Ninja, Conan 2, and the compiler's `-freflection` implementation of C++26 static reflection.
+The reference environment is Windows 11 with MSYS2 UCRT64 GCC 16.2, CMake 4.4,
+Ninja, and Conan 2. Reflection code requires `-freflection`.
 
-## Current status
+## Status
 
-The repository is being built milestone by milestone from the accompanying design specification. The initial scaffold separates the reflection-facing interface from a compiled runtime library and pins the intended toolchain and dependency workflow.
+Flash is under development and is not ready for production. The API and compiler
+requirements can change during the v0.1 release cycle.
 
-See [PROGRESS.md](PROGRESS.md) for the current checkpoint and [flash-framework-spec-and-design.md](flash-framework-spec-and-design.md) for the proposed v0.1 design.
+See [PROGRESS.md](PROGRESS.md) for the current work and
+[flash framework spec and design.md](flash-framework-spec-and-design.md) for the
+v0.1 requirements.
 
-## Configure and test
+## Build and test
 
 ```powershell
 conan install . --output-folder=build/conan/debug --build=missing -s build_type=Debug
@@ -19,9 +24,8 @@ cmake --build --preset debug
 ctest --preset debug
 ```
 
-Flash is not production-ready. The API, supported compiler revision, and implementation are expected to change during the experimental v0.1 cycle.
+## Editor support
 
-## Tooling limitation
-
-G++ is authoritative for code containing reflection syntax. Current clangd builds do not understand `^^`, splicers, annotation expressions, or the rest of the P2996/P3394 feature set, so editor diagnostics can be noisy under `include/flash/meta/`. Do not remove `-freflection` to silence those diagnostics.
-
+G++ is required for files that use reflection. Current clangd versions do not
+parse `^^`, splicers, or annotation expressions. Use the G++ build results for
+those files. Keep `-freflection` enabled.

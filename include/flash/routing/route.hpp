@@ -197,8 +197,8 @@ struct route_match {
     std::size_t capture_count{};
 };
 
-// Deliberately not constexpr: GCC 16.2 mis-folds this routine when a reflected
-// inline route object is passed at runtime (compiler repro tracked in ADR 0002).
+// GCC 16.2 can compile this function incorrectly when it is constexpr.
+// ADR 0002 records the compiler behavior.
 [[nodiscard]] inline route_match match_route(const route_pattern& pattern,
                                              std::string_view path) noexcept {
     route_match result;

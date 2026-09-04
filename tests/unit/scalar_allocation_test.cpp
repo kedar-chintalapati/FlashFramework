@@ -83,11 +83,10 @@ int main() {
     }
     tracking.store(false, std::memory_order_relaxed);
 
-    // Measured boundary: generated route matching plus successful integer path
-    // binding. Transport, coroutine, response, and user allocations are excluded.
+    // This measures route matching and integer path binding.
+    // It excludes transport, coroutine, response, and user allocations.
     return allocation_count.load(std::memory_order_relaxed) == 0 &&
                    checksum == 420'000U
                ? 0
                : 3;
 }
-

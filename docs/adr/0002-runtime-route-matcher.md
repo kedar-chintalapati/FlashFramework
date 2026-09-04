@@ -1,20 +1,24 @@
-# ADR 0002: Keep runtime route matching out of constant evaluation on GCC 16.2
+# ADR 0002. Runtime route matcher
 
-- Status: accepted workaround
-- Date: 2026-09-03
+Status is an accepted workaround.
+
+Date is 2026-09-03.
 
 ## Context
 
-The consteval route parser produces correct normalized segments and all direct comparisons succeed. During the route spike, GCC 16.2 generated an incorrect `false` result for a `constexpr` runtime matcher when its input was an inline route object derived from reflected annotations. Adding unrelated observable work changed the result back to `true`, indicating incorrect constant folding or code generation rather than a route-algorithm defect.
+The route parser produces correct segments during constant evaluation. GCC 16.2
+produced an incorrect result when a constexpr runtime matcher received an inline
+route object derived from annotations. Unrelated observable work changed the
+result. This indicates a compiler problem.
 
 ## Decision
 
-Route grammar parsing and API validation remain consteval. The byte-oriented request-path matcher is an ordinary inline runtime function, which is semantically appropriate because the request path is runtime data and avoids the compiler defect.
+Route grammar and API validation use constant evaluation. Request path comparison
+uses an ordinary inline function because request paths are runtime data.
 
-## Consequences
+## Results
 
-- No routing decision is moved from compile time back to runtime beyond the byte comparisons that were always required.
-- The normalized route, conflict checks, and specialized API traversal remain compile-time generated.
-- The workaround can be retested and potentially removed when the reference GCC patch revision changes.
-- A minimal compiler reproduction should be retained if the issue can be reduced without Flash headers.
-
+- Runtime performs the byte comparisons required for each request.
+- Route normalization and conflict checks remain compile time work.
+- The workaround can be tested again after a GCC upgrade.
+- A small compiler reproduction should be kept if one can be isolated.

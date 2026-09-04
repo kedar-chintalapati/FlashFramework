@@ -68,6 +68,11 @@ This file is an interruption safe checkpoint for the Flash v0.1 implementation.
   awaits a task spawned on that pool. A unit test confirms that work runs on a
   different thread and returns through the request coroutine. All 36 Debug and
   Release tests pass. M6 is complete.
+- The native benchmark harness now compares typed Flash routes with matching
+  handwritten Beast routes. It covers text, integer binding, JSON output, JSON
+  echo at three body sizes, validation failure, and an Asio timer wait. The load
+  client records throughput, latency percentiles, and errors. A small smoke run
+  passed all 16 server and workload combinations with zero errors.
 
 ## Milestones
 

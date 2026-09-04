@@ -21,7 +21,18 @@ add_executable(flash_benchmark_beast baselines/beast/health_server.cpp)
 target_link_libraries(flash_benchmark_beast PRIVATE flash_benchmark_options)
 flash_enable_warnings(flash_benchmark_beast)
 
+add_executable(flash_benchmark_manual baselines/beast/suite_server.cpp)
+target_link_libraries(flash_benchmark_manual PRIVATE flash::flash flash_benchmark_options)
+flash_enable_warnings(flash_benchmark_manual)
+
 add_executable(flash_benchmark_request_view micro/request_view.cpp)
 target_link_libraries(flash_benchmark_request_view PRIVATE flash::runtime flash_benchmark_options)
 flash_enable_warnings(flash_benchmark_request_view)
 
+add_executable(flash_benchmark_load client/load.cpp)
+target_link_libraries(flash_benchmark_load PRIVATE flash_benchmark_options)
+flash_enable_warnings(flash_benchmark_load)
+
+add_executable(flash_benchmark_typed end_to_end/flash_typed_suite.cpp)
+target_link_libraries(flash_benchmark_typed PRIVATE flash::flash flash_benchmark_options)
+flash_enable_warnings(flash_benchmark_typed)

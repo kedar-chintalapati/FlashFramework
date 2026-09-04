@@ -106,11 +106,16 @@ template <class Value>
 
 [[nodiscard]] inline response_message binding_problem(
     const binding::binding_error& error, const request_view& request) {
+    const bool media_type_error = error.status_code == status::unsupported_media_type;
     return make_problem_response({
-        .type = "https://flash.dev/problems/invalid-parameter",
-        .title = "Invalid request parameter",
-        .status_code = status::unprocessable_content,
-        .detail = "Request parameter could not be bound to the endpoint signature.",
+        .type = media_type_error
+                    ? "https://flash.dev/problems/unsupported-media-type"
+                    : "https://flash.dev/problems/invalid-parameter",
+        .title = media_type_error ? "Unsupported media type" : "Invalid request parameter",
+        .status_code = error.status_code,
+        .detail = media_type_error
+                      ? "The request body media type is not supported."
+                      : "Request parameter could not be bound to the endpoint signature.",
         .instance = std::string{request.target()},
         .errors = {{{source_name(error.source), error.name}, error.code, error.message}},
         .request_id = {},

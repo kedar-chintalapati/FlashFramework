@@ -4,13 +4,48 @@
 #include <flash/detail/fixed_string.hpp>
 #include <flash/meta/reflection.hpp>
 
+#include <array>
 #include <concepts>
 #include <cstddef>
 #include <meta>
 #include <string_view>
 #include <type_traits>
+#include <vector>
 
 namespace flash::json {
+
+namespace detail {
+
+template <class>
+struct vector_traits {
+    static constexpr bool value = false;
+};
+
+template <class Value, class Allocator>
+struct vector_traits<std::vector<Value, Allocator>> {
+    static constexpr bool value = true;
+    using element_type = Value;
+};
+
+template <class>
+struct array_traits {
+    static constexpr bool value = false;
+};
+
+template <class Value, std::size_t Size>
+struct array_traits<std::array<Value, Size>> {
+    static constexpr bool value = true;
+    using element_type = Value;
+    static constexpr std::size_t size = Size;
+};
+
+template <class Value>
+inline constexpr bool is_vector_v = vector_traits<std::remove_cv_t<Value>>::value;
+
+template <class Value>
+inline constexpr bool is_array_v = array_traits<std::remove_cv_t<Value>>::value;
+
+} // namespace detail
 
 template <class Value>
 using object_type_t = std::remove_cvref_t<Value>;
@@ -40,7 +75,7 @@ inline constexpr std::size_t field_alias_count =
         .size();
 
 template <class Object, std::size_t Index>
-[[nodiscard]] consteval detail::fixed_string field_wire_name_value() {
+[[nodiscard]] consteval flash::detail::fixed_string field_wire_name_value() {
     static_assert(field_alias_count<Object, Index> <= 1,
                   "FLASH-E401: a JSON field may have at most one name annotation");
 
@@ -51,9 +86,9 @@ template <class Object, std::size_t Index>
             .value;
     } else {
         constexpr auto identifier = std::meta::identifier_of(field_reflection<Object, Index>);
-        static_assert(identifier.size() < detail::annotation_text_capacity,
+        static_assert(identifier.size() < flash::detail::annotation_text_capacity,
                       "FLASH-E406: a reflected JSON field name is too long");
-        detail::fixed_string result{};
+        flash::detail::fixed_string result{};
         result.length = identifier.size();
         for (std::size_t index = 0; index < identifier.size(); ++index) {
             result.characters[index] = identifier[index];
@@ -63,12 +98,30 @@ template <class Object, std::size_t Index>
 }
 
 template <class Object, std::size_t Index>
-inline constexpr detail::fixed_string field_wire_name_storage =
+inline constexpr flash::detail::fixed_string field_wire_name_storage =
     field_wire_name_value<Object, Index>();
 
 template <class Object, std::size_t Index>
 [[nodiscard]] constexpr std::string_view field_wire_name() noexcept {
     return field_wire_name_storage<Object, Index>.view();
+}
+
+template <class Object, std::size_t Index>
+inline constexpr std::size_t field_default_count =
+    std::meta::annotations_of_with_type(
+        field_reflection<Object, Index>,
+        ^^default_value_annotation<field_type_t<Object, Index>>)
+        .size();
+
+template <class Object, std::size_t Index>
+[[nodiscard]] consteval field_type_t<Object, Index> field_default_value() {
+    static_assert(field_default_count<Object, Index> == 1,
+                  "FLASH-E408: a JSON field default must be unique and match its field type");
+    return std::meta::extract<default_value_annotation<field_type_t<Object, Index>>>(
+               std::meta::annotations_of_with_type(
+                   field_reflection<Object, Index>,
+                   ^^default_value_annotation<field_type_t<Object, Index>>)[0])
+        .value;
 }
 
 template <class Object, std::size_t Index = 0>
@@ -79,6 +132,17 @@ template <class Object, std::size_t Index = 0>
         return false;
     } else {
         return all_fields_public<Object, Index + 1>();
+    }
+}
+
+template <class Object, std::size_t Index = 0>
+consteval void validate_field_metadata() {
+    if constexpr (Index < field_count<Object>) {
+        static_assert(field_alias_count<Object, Index> <= 1,
+                      "FLASH-E401: a JSON field may have at most one name annotation");
+        static_assert(field_default_count<Object, Index> <= 1,
+                      "FLASH-E408: a JSON field may have at most one matching default annotation");
+        validate_field_metadata<Object, Index + 1>();
     }
 }
 
@@ -102,6 +166,7 @@ consteval void validate_output_schema() {
     static_assert(reflectable_object<object_type>,
                   "FLASH-E402: a JSON object must be a class aggregate");
     if constexpr (reflectable_object<object_type>) {
+        validate_field_metadata<object_type>();
         static_assert(all_fields_public<object_type>(),
                       "FLASH-E403: reflected JSON fields must be public");
         static_assert(field_names_unique<object_type>(),

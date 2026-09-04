@@ -16,6 +16,16 @@ enum class display_color {
     blue,
 };
 
+struct CreateOrder {
+    std::string sku;
+    [[=flash::minimum(1)]] std::uint32_t quantity{};
+};
+
+struct OrderReceipt {
+    std::string sku;
+    std::uint32_t accepted{};
+};
+
 namespace typed_api {
 
 [[=flash::get("/add/{a}/{b}")]]
@@ -55,6 +65,11 @@ void remove_widget(std::uint64_t id) {
     (void)id;
 }
 
+[[=flash::post("/orders")]]
+OrderReceipt create_order(CreateOrder order) {
+    return {std::move(order.sku), order.quantity};
+}
+
 } // namespace typed_api
 
 flash::response_message run(flash::task<flash::response_message> operation) {
@@ -68,9 +83,10 @@ flash::response_message run(flash::task<flash::response_message> operation) {
 flash::response_message request(
     flash::http_method method,
     std::string_view target,
-    std::span<const flash::header_view> headers = {}) {
+    std::span<const flash::header_view> headers = {},
+    std::string_view body = {}) {
     return run(flash::dispatch<^^typed_api>(
-        flash::request_view{method, target, headers, {}, false}));
+        flash::request_view{method, target, headers, body, false}));
 }
 
 int main() {
@@ -142,9 +158,33 @@ int main() {
         return 11;
     }
 
+    constexpr std::array json_headers{
+        flash::header_view{"Content-Type", "application/json; charset=utf-8"},
+    };
+    const auto created = request(
+        flash::http_method::post, "/orders", json_headers,
+        R"({"sku":"part-42","quantity":4})");
+    if (created.status_code != flash::status::ok ||
+        created.body != R"({"sku":"part-42","accepted":4})") {
+        return 12;
+    }
+    const auto invalid_body = request(
+        flash::http_method::post, "/orders", json_headers,
+        R"({"sku":"part-42","quantity":0})");
+    if (invalid_body.status_code != flash::status::unprocessable_content ||
+        invalid_body.body.find("constraint_failed") == std::string::npos ||
+        invalid_body.body.find("$.quantity") == std::string::npos) {
+        return 13;
+    }
+    const auto missing_content_type = request(
+        flash::http_method::post, "/orders", {},
+        R"({"sku":"part-42","quantity":4})");
+    if (missing_content_type.status_code != flash::status::unsupported_media_type) {
+        return 14;
+    }
+
     return request(flash::http_method::get, "/missing").status_code ==
                    flash::status::not_found
                ? 0
-               : 12;
+               : 15;
 }
-

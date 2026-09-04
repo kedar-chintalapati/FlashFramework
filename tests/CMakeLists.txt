@@ -38,6 +38,11 @@ target_link_libraries(flash_json_schema_test PRIVATE flash::meta)
 flash_enable_warnings(flash_json_schema_test)
 add_test(NAME flash.json_schema COMMAND flash_json_schema_test)
 
+add_executable(flash_json_read_test unit/json_read_test.cpp)
+target_link_libraries(flash_json_read_test PRIVATE flash::meta)
+flash_enable_warnings(flash_json_read_test)
+add_test(NAME flash.json_read COMMAND flash_json_read_test)
+
 
 add_executable(flash_raw_server_test integration/raw_server_test.cpp)
 target_link_libraries(flash_raw_server_test PRIVATE flash::runtime)
@@ -116,4 +121,10 @@ flash_add_compile_fail_test(
     flash.compile_fail.duplicate_json_alias
     compile_fail/duplicate_json_alias.cpp
     FLASH-E404
+)
+
+flash_add_compile_fail_test(
+    flash.compile_fail.multiple_body_parameters
+    compile_fail/multiple_body_parameters.cpp
+    FLASH-E305
 )

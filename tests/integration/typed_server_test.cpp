@@ -10,6 +10,16 @@
 #include <cstdint>
 #include <string>
 
+struct CreateItem {
+    std::string name;
+    [[=flash::minimum(1)]] std::uint32_t quantity{};
+};
+
+struct StoredItem {
+    std::string name;
+    std::uint32_t quantity{};
+};
+
 namespace typed_server_api {
 
 [[=flash::get("/health")]]
@@ -25,6 +35,11 @@ int add(int a, int b) {
 [[=flash::delete_("/items/{id}")]]
 void erase(std::uint64_t id) {
     (void)id;
+}
+
+[[=flash::post("/items")]]
+StoredItem create(CreateItem item) {
+    return {std::move(item.name), item.quantity};
 }
 
 } // namespace typed_server_api
@@ -54,9 +69,16 @@ int main() {
 
     const auto exchange = [&stream, &buffer](http::verb method,
                                              std::string target,
-                                             bool keep_alive) {
-        http::request<http::empty_body> request{method, std::move(target), 11};
+                                             bool keep_alive,
+                                             std::string body = {},
+                                             std::string content_type = {}) {
+        http::request<http::string_body> request{method, std::move(target), 11};
         request.set(http::field::host, "127.0.0.1");
+        request.body() = std::move(body);
+        if (!content_type.empty()) {
+            request.set(http::field::content_type, content_type);
+        }
+        request.prepare_payload();
         request.keep_alive(keep_alive);
         http::write(stream, request);
         http::response<http::string_body> response;
@@ -67,6 +89,12 @@ int main() {
     const auto health = exchange(http::verb::get, "/health", true);
     const auto added = exchange(http::verb::get, "/add/19/23", true);
     const auto invalid = exchange(http::verb::get, "/add/nope/1", true);
+    const auto created = exchange(
+        http::verb::post, "/items", true,
+        R"({"name":"widget","quantity":2})", "application/json");
+    const auto invalid_body = exchange(
+        http::verb::post, "/items", true,
+        R"({"name":"widget","quantity":0})", "application/json");
     const auto erased = exchange(http::verb::delete_, "/items/7", false);
 
     server.stop();
@@ -85,9 +113,17 @@ int main() {
         invalid.body().find("invalid_integer") == std::string::npos) {
         return 3;
     }
-    if (erased.result() != http::status::no_content || !erased.body().empty()) {
+    if (created.result() != http::status::ok ||
+        created.body() != R"({"name":"widget","quantity":2})" ||
+        created[http::field::content_type] != "application/json") {
         return 4;
+    }
+    if (invalid_body.result_int() != 422 ||
+        invalid_body.body().find("constraint_failed") == std::string::npos) {
+        return 5;
+    }
+    if (erased.result() != http::status::no_content || !erased.body().empty()) {
+        return 6;
     }
     return 0;
 }
-

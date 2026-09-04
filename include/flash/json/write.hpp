@@ -1,7 +1,9 @@
 #pragma once
 
 #include <flash/binding/scalar.hpp>
+#include <flash/json/schema.hpp>
 
+#include <array>
 #include <charconv>
 #include <cmath>
 #include <concepts>
@@ -12,8 +14,13 @@
 #include <string>
 #include <string_view>
 #include <type_traits>
+#include <vector>
 
 namespace flash::json {
+
+template <class Value>
+void append(std::string& output, const Value& value);
+
 namespace detail {
 
 inline void append_escaped_string(std::string& output, std::string_view value) {
@@ -57,6 +64,19 @@ template <class Enum, std::size_t Index = 0>
     }
 }
 
+template <class Object, std::size_t Index = 0>
+void append_object_fields(std::string& output, const Object& object) {
+    if constexpr (Index < field_count<Object>) {
+        if constexpr (Index != 0) {
+            output.push_back(',');
+        }
+        append_escaped_string(output, field_wire_name<Object, Index>());
+        output.push_back(':');
+        append(output, object.[:field_reflection<Object, Index>:]);
+        append_object_fields<Object, Index + 1>(output, object);
+    }
+}
+
 } // namespace detail
 
 template <class Value>
@@ -97,6 +117,23 @@ void append(std::string& output, const Value& value) {
         } else {
             output.append("null");
         }
+    } else if constexpr (detail::is_vector_v<value_type> ||
+                         detail::is_array_v<value_type>) {
+        output.push_back('[');
+        bool first = true;
+        for (const auto& element : value) {
+            if (!first) {
+                output.push_back(',');
+            }
+            first = false;
+            append(output, element);
+        }
+        output.push_back(']');
+    } else if constexpr (reflectable_object<value_type>) {
+        static_assert(output_schema_validated<value_type>);
+        output.push_back('{');
+        detail::append_object_fields(output, value);
+        output.push_back('}');
     } else {
         static_assert(std::is_void_v<value_type>,
                       "FLASH-E400: no JSON writer exists for this response type");
@@ -112,4 +149,3 @@ template <class Value>
 }
 
 } // namespace flash::json
-

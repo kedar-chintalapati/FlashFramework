@@ -8,6 +8,7 @@
 #include <flash/dispatch.hpp>
 #include <flash/json/write.hpp>
 #include <flash/json/schema.hpp>
+#include <flash/json/read.hpp>
 #include <flash/meta/reflection.hpp>
 #include <flash/problem.hpp>
 #include <flash/raw.hpp>

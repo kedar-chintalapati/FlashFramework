@@ -4,7 +4,9 @@
 #include <flash/binding/request.hpp>
 #include <flash/binding/scalar.hpp>
 #include <flash/context.hpp>
+#include <flash/json/read.hpp>
 #include <flash/request.hpp>
+#include <flash/response.hpp>
 #include <flash/routing/route.hpp>
 
 #include <expected>
@@ -21,7 +23,21 @@ struct binding_error {
     std::string name;
     std::string code;
     std::string message;
+    status status_code{status::unprocessable_content};
 };
+
+[[nodiscard]] constexpr bool is_json_media_type(std::string_view value) noexcept {
+    value = trim_optional_whitespace(value);
+    const auto parameter = value.find(';');
+    const auto media_type = trim_optional_whitespace(value.substr(0, parameter));
+    if (ascii_iequals(media_type, "application/json")) {
+        return true;
+    }
+    constexpr std::string_view suffix = "+json";
+    return media_type.size() > suffix.size() &&
+           ascii_iequals(media_type.substr(media_type.size() - suffix.size()), suffix) &&
+           media_type.find('/') != std::string_view::npos;
+}
 
 [[nodiscard]] inline std::optional<std::string_view>
 find_path_value(const routing::route_match& match, std::string_view name) noexcept {
@@ -63,7 +79,27 @@ bind_parameter(const request_view& request, const routing::route_match& match) {
         } else if constexpr (std::same_as<storage_type, raw_request_view>) {
             return request;
         }
-    } else if constexpr (source == source_kind::body || source == source_kind::state) {
+    } else if constexpr (source == source_kind::body) {
+        auto content_type = find_header_value(request, "Content-Type");
+        if (!content_type) {
+            return std::unexpected{binding_error{
+                source, std::string{name}, content_type.error().code,
+                content_type.error().message, status::bad_request}};
+        }
+        if (!*content_type || !is_json_media_type(**content_type)) {
+            return std::unexpected{binding_error{
+                source, std::string{name}, "unsupported_media_type",
+                "A JSON request body requires an application/json media type.",
+                status::unsupported_media_type}};
+        }
+        auto parsed = json::read<storage_type>(request.body());
+        if (!parsed) {
+            return std::unexpected{binding_error{
+                source, parsed.error().path, parsed.error().code,
+                parsed.error().message, status::unprocessable_content}};
+        }
+        return std::move(*parsed);
+    } else if constexpr (source == source_kind::state) {
         static_assert(std::is_void_v<storage_type>,
                       "FLASH-E304: this parameter source is not enabled by the current dispatcher");
     } else {
@@ -120,4 +156,3 @@ bind_parameter(const request_view& request, const routing::route_match& match) {
 }
 
 } // namespace flash::binding
-

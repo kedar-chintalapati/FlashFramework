@@ -177,6 +177,16 @@ template <std::meta::info Function, std::size_t Index = 0>
     }
 }
 
+template <std::meta::info Function, std::size_t Index = 0>
+[[nodiscard]] consteval std::size_t body_parameter_count() {
+    if constexpr (Index == meta::parameter_count<Function>()) {
+        return 0;
+    } else {
+        return (parameter_source<Function, Index>() == source_kind::body ? 1U : 0U) +
+               body_parameter_count<Function, Index + 1>();
+    }
+}
+
 template <std::meta::info Function>
 consteval void validate_endpoint_binding() {
     static_assert(parameter_annotations_valid<Function>(),
@@ -185,6 +195,8 @@ consteval void validate_endpoint_binding() {
                   "FLASH-E302: every route placeholder must bind exactly one parameter");
     static_assert(every_explicit_path_exists<Function>(),
                   "FLASH-E303: a path parameter must name a route placeholder");
+    static_assert(body_parameter_count<Function>() <= 1,
+                  "FLASH-E305: an endpoint may have at most one body parameter");
 }
 
 template <std::meta::info Function>

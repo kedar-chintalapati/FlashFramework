@@ -31,6 +31,14 @@ This file is an interruption-safe checkpoint for the Flash v0.1 implementation.
   invalid aggregates, inaccessible fields, ambiguous aliases, duplicate wire names,
   and non-default-constructible request objects; focused Debug and compile-fail
   coverage pass.
+- The native JSON codec reads and writes reflected aggregates, vectors, fixed arrays,
+  optionals, strings, numbers, booleans, and enums. It applies finite limits, UTF-8
+  and Unicode escape checks, required and duplicate field rules, defaults, aliases,
+  and numeric, length, and item constraints.
+- Inferred and explicit JSON request bodies now bind through generated adapters.
+  Media types are checked, multiple body parameters fail at compile time, and a
+  typed POST returning another reflected aggregate passes direct and loopback tests.
+- All 20 tests pass in both Debug and Release at this checkpoint.
 
 ## Milestones
 
@@ -38,16 +46,16 @@ This file is an interruption-safe checkpoint for the Flash v0.1 implementation.
 - [x] M1: HTTP runtime and raw endpoints
 - [x] M2: compile-time routes
 - [x] M3: typed scalar binding
-- [ ] M4: reflected schema and JSON
+- [x] M4: reflected schema and JSON
 - [ ] M5: responses, errors, and OpenAPI
 - [ ] M6: async, state, and middleware
 - [ ] M7: performance hardening and experimental release
 
 ## Immediate next work
 
-1. Implement the native typed JSON cursor and recursive value decoder.
-2. Add strict duplicate/unknown/missing/null behavior, containers, and validation.
-3. Extend the writer and exercise a registration-free typed JSON POST endpoint over loopback HTTP.
+1. Add typed response mappings and consistent error policies.
+2. Generate deterministic OpenAPI 3.1.1 from the same route and schema metadata.
+3. Serve the OpenAPI document and a small documentation page without registration.
 
 ## Safety and recovery notes
 

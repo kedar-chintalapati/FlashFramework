@@ -4,6 +4,7 @@
 
 #include <concepts>
 #include <cstddef>
+#include <stop_token>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -14,6 +15,7 @@ namespace flash {
 struct request_context {
     request_view request;
     std::string request_id;
+    std::stop_token stop_token;
 };
 
 template <class Value>

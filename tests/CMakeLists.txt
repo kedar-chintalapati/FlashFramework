@@ -71,6 +71,18 @@ flash_enable_warnings(flash_raw_concurrency_test)
 add_test(NAME flash.raw_concurrency COMMAND flash_raw_concurrency_test)
 set_tests_properties(flash.raw_concurrency PROPERTIES TIMEOUT 20)
 
+add_executable(flash_shutdown_test integration/shutdown_test.cpp)
+target_link_libraries(flash_shutdown_test PRIVATE flash::runtime)
+flash_enable_warnings(flash_shutdown_test)
+add_test(NAME flash.shutdown COMMAND flash_shutdown_test)
+set_tests_properties(flash.shutdown PROPERTIES TIMEOUT 15)
+
+add_executable(flash_timeout_test integration/timeout_test.cpp)
+target_link_libraries(flash_timeout_test PRIVATE flash::runtime)
+flash_enable_warnings(flash_timeout_test)
+add_test(NAME flash.timeouts COMMAND flash_timeout_test)
+set_tests_properties(flash.timeouts PROPERTIES TIMEOUT 15)
+
 add_executable(flash_typed_server_test integration/typed_server_test.cpp)
 target_link_libraries(flash_typed_server_test PRIVATE flash::flash)
 flash_enable_warnings(flash_typed_server_test)

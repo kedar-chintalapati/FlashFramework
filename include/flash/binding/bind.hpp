@@ -99,7 +99,10 @@ bind_parameter(const request_view& request,
     if constexpr (source == source_kind::context) {
         if constexpr (std::same_as<storage_type, request_context>) {
             return request_context{
-                .request = request, .request_id = std::string{request_id}};
+                .request = request,
+                .request_id = std::string{request_id},
+                .stop_token = request.stop_token(),
+            };
         } else if constexpr (std::same_as<storage_type, raw_request_view>) {
             return request;
         }

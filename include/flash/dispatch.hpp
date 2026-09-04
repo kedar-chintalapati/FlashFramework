@@ -366,7 +366,11 @@ struct application_handler {
 
     task<response_message> operator()(raw_request_view request,
                                       raw_response_writer&) {
-        request_context context{.request = request, .request_id = {}};
+        request_context context{
+            .request = request,
+            .request_id = {},
+            .stop_token = request.stop_token(),
+        };
         auto final = [this, &context]() -> task<response_message> {
             if (auto response =
                     openapi::documentation_response<Namespace, Documentation>(

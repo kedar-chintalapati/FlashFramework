@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <optional>
 #include <span>
+#include <stop_token>
 #include <string_view>
 
 namespace flash {
@@ -41,13 +42,15 @@ public:
     constexpr request_view(http_method method,
                            std::string_view target,
                            std::span<const header_view> headers,
-                           std::string_view body,
-                           bool keep_alive) noexcept
+                           std::string_view body_value,
+                           bool keep_alive_value,
+                           std::stop_token stop_token_value = {}) noexcept
         : method_(method),
           target_(target),
           headers_(headers),
-          body_(body),
-          keep_alive_(keep_alive) {
+          body_(body_value),
+          keep_alive_(keep_alive_value),
+          stop_token_(stop_token_value) {
         const auto query_marker = target.find('?');
         path_ = target.substr(0, query_marker);
         if (query_marker != std::string_view::npos) {
@@ -62,6 +65,7 @@ public:
     [[nodiscard]] constexpr std::span<const header_view> headers() const noexcept { return headers_; }
     [[nodiscard]] constexpr std::string_view body() const noexcept { return body_; }
     [[nodiscard]] constexpr bool keep_alive() const noexcept { return keep_alive_; }
+    [[nodiscard]] std::stop_token stop_token() const noexcept { return stop_token_; }
 
     [[nodiscard]] constexpr std::optional<std::string_view>
     header(std::string_view name) const noexcept {
@@ -81,9 +85,9 @@ private:
     std::span<const header_view> headers_{};
     std::string_view body_{};
     bool keep_alive_{};
+    std::stop_token stop_token_{};
 };
 
 using raw_request_view = request_view;
 
 } // namespace flash
-

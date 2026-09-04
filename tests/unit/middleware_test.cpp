@@ -61,6 +61,7 @@ int main() {
     flash::request_context successful{
         .request = {flash::http_method::get, "/ok", client_headers, {}, false},
         .request_id = {},
+        .stop_token = {},
     };
     auto success = [&successful]() -> flash::task<flash::response_message> {
         flash::response_message response;
@@ -83,6 +84,7 @@ int main() {
     flash::request_context duplicate{
         .request = {flash::http_method::get, "/duplicate", duplicate_headers, {}, false},
         .request_id = {},
+        .stop_token = {},
     };
     auto duplicate_final = []() -> flash::task<flash::response_message> {
         co_return flash::response_message{};
@@ -97,6 +99,7 @@ int main() {
     flash::request_context failed{
         .request = {flash::http_method::post, "/failure", {}, {}, false},
         .request_id = {},
+        .stop_token = {},
     };
     auto failure = []() -> flash::task<flash::response_message> {
         throw std::runtime_error{"private detail"};
@@ -121,6 +124,7 @@ int main() {
     flash::request_context sink_context{
         .request = {flash::http_method::get, "/sink", {}, {}, false},
         .request_id = {},
+        .stop_token = {},
     };
     auto sink_final = []() -> flash::task<flash::response_message> {
         co_return flash::response_message{};

@@ -59,6 +59,11 @@ This file is an interruption safe checkpoint for the Flash v0.1 implementation.
   and exception recovery middleware pass unit and loopback tests. Request IDs
   reach endpoint context, response headers, problem bodies, and log records.
   Invalid middleware return types produce `FLASH-E700`. All 33 Debug tests pass.
+- Server stop now closes the listener, requests cooperative handler stop, cancels
+  idle reads, drains active responses, and forces cancellation after the configured
+  deadline. Header, body, and keepalive deadlines have loopback coverage. Session
+  control is owned by each coroutine and serialized on a strand. All 35 Debug
+  tests pass, including repeated shutdown and concurrency runs.
 
 ## Milestones
 
@@ -73,7 +78,8 @@ This file is an interruption safe checkpoint for the Flash v0.1 implementation.
 
 ## Immediate next work
 
-1. Improve cancellation and graceful shutdown tests.
+1. Add the explicit blocking work example.
+2. Run the complete Release suite for M6.
 
 ## Safety and recovery notes
 

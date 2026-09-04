@@ -12,6 +12,7 @@ int main() {
     flash::request_context context{
         .request = {flash::http_method::get, "/", {}, {}, false},
         .request_id = {},
+        .stop_token = {},
     };
     auto final = []() -> flash::task<flash::response_message> {
         co_return flash::response_message{};

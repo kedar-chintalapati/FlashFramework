@@ -43,6 +43,12 @@ target_link_libraries(flash_json_read_test PRIVATE flash::meta)
 flash_enable_warnings(flash_json_read_test)
 add_test(NAME flash.json_read COMMAND flash_json_read_test)
 
+add_executable(flash_adversarial_input_test unit/adversarial_input_test.cpp)
+target_link_libraries(flash_adversarial_input_test PRIVATE flash::flash)
+flash_enable_warnings(flash_adversarial_input_test)
+add_test(NAME flash.adversarial_input COMMAND flash_adversarial_input_test)
+set_tests_properties(flash.adversarial_input PROPERTIES TIMEOUT 10)
+
 add_executable(flash_openapi_schema_test unit/openapi_schema_test.cpp)
 target_link_libraries(flash_openapi_schema_test PRIVATE flash::flash)
 flash_enable_warnings(flash_openapi_schema_test)

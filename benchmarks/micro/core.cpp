@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -217,7 +218,7 @@ int main(int argument_count, char** arguments) {
     measure("parse_float", base_iterations, 9, [&](std::size_t index) {
         const auto value = flash::binding::parse_scalar<double>(
             floating_values[index % floating_values.size()]);
-        return value ? static_cast<std::uint64_t>(*value * 1'000'000.0) : 0;
+        return value ? std::bit_cast<std::uint64_t>(*value) : 0;
     });
 
     constexpr std::array boolean_values{

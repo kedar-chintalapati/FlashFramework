@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 4.4)
+project(flash_consumer LANGUAGES CXX)
+find_package(flash 0.1.0 EXACT CONFIG REQUIRED)
+add_executable(flash_consumer main.cpp)
+target_link_libraries(flash_consumer PRIVATE flash::flash)
+enable_testing()
+add_test(NAME flash.installed_consumer COMMAND flash_consumer)

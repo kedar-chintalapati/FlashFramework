@@ -49,6 +49,35 @@ add_library(flash INTERFACE)
 add_library(flash::flash ALIAS flash)
 target_link_libraries(flash INTERFACE flash::meta flash::runtime)
 
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+set_target_properties(flash_runtime PROPERTIES EXPORT_NAME runtime)
+set_target_properties(flash_meta PROPERTIES EXPORT_NAME meta)
+install(TARGETS flash flash_meta flash_runtime
+    EXPORT flashTargets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(EXPORT flashTargets
+    NAMESPACE flash::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/flash
+)
+configure_package_config_file(
+    cmake/flashConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/flashConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/flash
+)
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/flashConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY ExactVersion
+)
+install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/flashConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/flashConfigVersion.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/flash
+)
+
 include(cmake/FlashWarnings.cmake)
 flash_enable_warnings(flash_runtime)
 

@@ -96,6 +96,23 @@ This file is an interruption safe checkpoint for the Flash v0.1 implementation.
 
 ## Immediate next work
 
+The complete initial Windows matrix at commit ab3775a passed 384 records with
+zero errors. Raw files remain in build/benchmark-results/release-ab3775a-windows.
+The reviewed initial report is docs/benchmarks/windows-initial.md. Several
+throughput gates were missed. The manual baseline has different lifecycle and
+strand behavior, so it cannot isolate typed dispatch overhead.
+
+Endpoint selection now returns the selected task without adding a coroutine
+for every earlier endpoint. Debug dispatch, middleware, and typed server tests
+passed. The native typed target rebuilt without warnings. Nine focused network
+trials passed with zero errors but showed timing variation, so no speedup claim
+is established by that run.
+
+CMake installation and an independent consumer are implemented. The Release
+install into build/package-check/prefix passed the consumer build and CTest.
+The consumer verifies compiled runtime linkage and reflected JSON from installed
+headers. Instructions are in docs/install.md.
+
 1. Complete the benchmark and allocation matrix.
 2. Measure compile time, compiler memory, and binary size.
 3. Add CI, package installation, release documentation, and security tests.

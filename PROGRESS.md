@@ -117,6 +117,17 @@ headers. Instructions are in docs/install.md.
 2. Measure compile time, compiler memory, and binary size.
 3. Add CI, package installation, release documentation, and security tests.
 
+The new adversarial input test passes in Debug. It checks malformed JSON,
+Unicode escapes, duplicate fields and query keys, size and depth limits, and
+10000 deterministic mutations with round trips for accepted values. The core
+benchmark floating point checksum now uses bit_cast to avoid converting a
+negative floating point value to an unsigned integer. The native benchmark
+rebuilt and ran successfully after this correction.
+
+CI now defines Windows Debug and Release jobs and Linux GCC 16.2.0 sanitizer
+coverage. Upstream action revisions are pinned. GitHub Actions is enabled.
+The first remote run still needs to be dispatched and checked after commit.
+
 ## Safety and recovery notes
 
 - Build presets intentionally cap Ninja at two jobs while the new reflection implementation is being characterized.

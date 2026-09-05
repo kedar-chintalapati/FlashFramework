@@ -259,6 +259,14 @@ task<response_message> invoke_endpoint(const request_view& request,
     }
 }
 
+inline task<response_message> invalid_endpoint(
+    const request_view& request, std::string_view request_id) {
+    co_return dispatch_problem(
+        status::internal_server_error, "Internal server error",
+        "The generated endpoint index is invalid.", std::string{request.target()},
+        request_id);
+}
+
 template <std::meta::info Namespace, class StateRegistry, std::size_t Index = 0>
 task<response_message> dispatch_endpoint(std::size_t endpoint_index,
                                          const request_view& request,
@@ -266,16 +274,13 @@ task<response_message> dispatch_endpoint(std::size_t endpoint_index,
                                          StateRegistry& states,
                                          std::string_view request_id) {
     if constexpr (Index == meta::endpoint_count_v<Namespace>) {
-        co_return dispatch_problem(
-            status::internal_server_error, "Internal server error",
-            "The generated endpoint index is invalid.", std::string{request.target()},
-            request_id);
+        return invalid_endpoint(request, request_id);
     } else {
         if (endpoint_index == Index) {
-            co_return co_await invoke_endpoint<endpoint_reflection<Namespace, Index>>(
+            return invoke_endpoint<endpoint_reflection<Namespace, Index>>(
                 request, route, states, request_id);
         }
-        co_return co_await dispatch_endpoint<Namespace, StateRegistry, Index + 1>(
+        return dispatch_endpoint<Namespace, StateRegistry, Index + 1>(
             endpoint_index, request, route, states, request_id);
     }
 }

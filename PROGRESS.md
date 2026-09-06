@@ -151,6 +151,10 @@ and OpenAPI export. The new CRUD and timer targets compile in Debug and Release.
 Release loopback smoke requests verified create, read, patch, delete, and the
 asynchronous timer response.
 
+The compile failure suite now has a raw handler contract case, so each public
+diagnostic number group from endpoint discovery through middleware is represented.
+The new `FLASH-E101` case passes in Debug.
+
 ## Safety and recovery notes
 
 - Build presets intentionally cap Ninja at two jobs while the new reflection implementation is being characterized.

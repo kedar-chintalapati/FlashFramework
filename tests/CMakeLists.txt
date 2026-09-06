@@ -214,3 +214,9 @@ flash_add_compile_fail_test(
     compile_fail/invalid_middleware.cpp
     FLASH-E700
 )
+
+flash_add_compile_fail_test(
+    flash.compile_fail.invalid_raw_handler
+    compile_fail/invalid_raw_handler.cpp
+    FLASH-E101
+)

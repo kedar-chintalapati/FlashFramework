@@ -35,6 +35,10 @@ exclusive numeric bounds, min_length, max_length, min_items, and max_items.
 String lengths measure encoded bytes. Borrowed string views cannot decode
 escaped strings and must not outlive the input buffer.
 
+Description and deprecated annotations appear in generated OpenAPI for
+endpoints, parameters, and JSON fields. Pattern and custom callable validation
+are deferred. Do not rely on the reserved pattern annotation in this release.
+
 ## Responses
 
 Ordinary supported values become JSON. flash::text emits text and flash::bytes

@@ -284,6 +284,28 @@ void append_constraints(std::string& output) {
     }
 }
 
+template <class Object, std::size_t Field>
+inline constexpr std::size_t field_description_count =
+    std::meta::annotations_of_with_type(
+        json::field_reflection<Object, Field>, ^^description_annotation)
+        .size();
+
+template <class Object, std::size_t Field>
+[[nodiscard]] consteval description_annotation field_description_value() {
+    static_assert(field_description_count<Object, Field> <= 1,
+                  "FLASH-E604: an OpenAPI declaration may have at most one description");
+    if constexpr (field_description_count<Object, Field> == 1) {
+        return std::meta::extract<description_annotation>(
+            std::meta::annotations_of_with_type(
+                json::field_reflection<Object, Field>, ^^description_annotation)[0]);
+    }
+    return {};
+}
+
+template <class Object, std::size_t Field>
+inline constexpr description_annotation field_description_storage =
+    field_description_value<Object, Field>();
+
 template <class Object, std::size_t Index = 0>
 void append_properties(std::string& output) {
     if constexpr (Index < json::field_count<Object>) {
@@ -299,6 +321,17 @@ void append_properties(std::string& output) {
         if constexpr (json::field_default_count<Object, Index> == 1) {
             output.append(",\"default\":");
             json::append(output, json::field_default_value<Object, Index>());
+        }
+        if constexpr (field_description_count<Object, Index> == 1) {
+            output.append(",\"description\":");
+            json::detail::append_escaped_string(
+                output, field_description_storage<Object, Index>.value.view());
+        }
+        if constexpr (std::meta::annotations_of_with_type(
+                          json::field_reflection<Object, Index>,
+                          ^^deprecated_annotation)
+                          .size() != 0) {
+            output.append(",\"deprecated\":true");
         }
         output.push_back('}');
         append_properties<Object, Index + 1>(output);

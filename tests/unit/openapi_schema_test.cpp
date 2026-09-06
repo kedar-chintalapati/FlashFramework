@@ -12,7 +12,8 @@ struct [[=flash::schema_name("Address")]] ApiAddress {
 };
 
 struct [[=flash::schema_name("CreateOrder")]] ApiOrder {
-    [[=flash::name("product_name"), =flash::min_length(2)]]
+    [[=flash::name("product_name"), =flash::min_length(2),
+      =flash::description("Stock keeping unit"), =flash::deprecated]]
     std::string product;
     [[=flash::minimum(1)]] std::uint32_t quantity{};
     std::optional<ApiAddress> address;
@@ -41,7 +42,8 @@ static_assert(flash::openapi::component_names_validated<^^schema_api>);
 
 int main() {
     const auto schema = flash::openapi::component_schema<ApiOrder>();
-    assert(schema.find(R"("product_name":{"type":"string","minLength":2})") !=
+    assert(schema.find(
+               R"("product_name":{"type":"string","minLength":2,"description":"Stock keeping unit","deprecated":true})") !=
            std::string::npos);
     assert(schema.find(R"("quantity":{"type":"integer","format":"int32","minimum":1})") !=
            std::string::npos);

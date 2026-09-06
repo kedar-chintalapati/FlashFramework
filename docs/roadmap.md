@@ -8,6 +8,9 @@ compiler memory limit, equivalent baseline lifecycle costs, fewer response
 allocations, global connection limits, sustained fuzzing, and broader compiler
 validation. The current generated route report records the scaling limit.
 
+Pattern checks and custom callable validators are also deferred. They require one
+runtime error contract and matching OpenAPI behavior before they become supported.
+
 Streaming, multipart bodies, TLS helpers, WebSockets, HTTP 2, and additional
 JSON codec policies are deferred. A later preview requires stronger performance
 evidence. A stable label requires compatibility policy and production evidence.

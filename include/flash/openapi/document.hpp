@@ -163,6 +163,17 @@ void append_parameters(std::string& output, bool& first) {
             } else {
                 json::detail::append_escaped_string(output, "cookie");
             }
+            constexpr auto parameter = meta::parameter_at<Function, Index>();
+            if constexpr (description_count<parameter> == 1) {
+                output.append(",\"description\":");
+                json::detail::append_escaped_string(
+                    output, description_storage<parameter>.value.view());
+            }
+            if constexpr (std::meta::annotations_of_with_type(
+                              parameter, ^^deprecated_annotation)
+                              .size() != 0) {
+                output.append(",\"deprecated\":true");
+            }
             using parameter_type = binding::parameter_storage_t<Function, Index>;
             constexpr bool required = source == source_kind::path ||
                                       (!binding::detail::is_optional_v<parameter_type> &&
@@ -177,7 +188,7 @@ void append_parameters(std::string& output, bool& first) {
                     output,
                     std::meta::extract<default_value_annotation<parameter_type>>(
                         std::meta::annotations_of_with_type(
-                            meta::parameter_at<Function, Index>(),
+                            parameter,
                             ^^default_value_annotation<parameter_type>)[0])
                         .value);
             }

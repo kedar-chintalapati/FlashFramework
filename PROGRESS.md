@@ -170,6 +170,12 @@ in 30.177 seconds with 573,796,352 bytes of sampled compiler working set. The
 report before stopping. The reviewed report is in
 docs/benchmarks/windows-routes.md.
 
+OpenAPI now emits descriptions and deprecation flags for parameters and JSON
+fields as well as endpoints. The focused schema and document tests pass in Debug.
+The golden export is unchanged and its local structural check passes. The
+external validator remains available in CI. Pattern and custom callable
+validation are explicitly deferred in the API guide and roadmap.
+
 ## Safety and recovery notes
 
 - Build presets intentionally cap Ninja at two jobs while the new reflection implementation is being characterized.

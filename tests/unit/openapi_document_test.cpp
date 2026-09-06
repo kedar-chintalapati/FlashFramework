@@ -33,7 +33,9 @@ flash::created<Pet> create_pet(CreatePet input);
 
 [[=flash::get("/search")]]
 flash::text search(
-    [[=flash::query("q"), =flash::min_length(2)]] std::string query);
+    [[=flash::query("q"), =flash::min_length(2),
+      =flash::description("Search text"), =flash::deprecated]]
+    std::string query);
 
 } // namespace document_api
 
@@ -50,7 +52,8 @@ int main() {
     assert(first.find(R"("post":{"operationId":"create_pet")") !=
            std::string::npos);
     assert(first.find(R"("requestBody":{"required":true)") != std::string::npos);
-    assert(first.find(R"("name":"q","in":"query","required":true,"schema":{"type":"string","minLength":2})") !=
+    assert(first.find(
+               R"("name":"q","in":"query","description":"Search text","deprecated":true,"required":true,"schema":{"type":"string","minLength":2})") !=
            std::string::npos);
     assert(first.find(R"("201":{"description":"Successful response")") !=
            std::string::npos);

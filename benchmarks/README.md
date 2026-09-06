@@ -68,3 +68,13 @@ Run the build measurement from PowerShell.
 The script creates a new Release build directory. It builds the hello server and
 OpenAPI exporter with two jobs. It records elapsed time, sampled compiler memory,
 and output sizes. It never removes an earlier measurement directory.
+
+Generated API build targets cover 1, 10, 100, and 1,000 reflected routes. They
+are excluded from ordinary builds. Measure one target from PowerShell.
+
+```powershell
+.\benchmarks\measure-synthetic.ps1 -Routes 100
+```
+
+The script uses a fresh build directory and two jobs. It refuses to overlap an
+existing compiler process. Its default sampled compiler memory limit is 2.5 GiB.

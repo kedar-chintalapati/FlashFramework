@@ -4,10 +4,12 @@
 #include <flash/meta/reflection.hpp>
 #include <flash/routing/route.hpp>
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace flash::routing {
 
@@ -22,32 +24,54 @@ template <std::meta::info Function>
 template <std::meta::info Function>
 inline constexpr route_pattern compiled_route = route_pattern_of<Function>();
 
-template <std::meta::info Namespace, std::size_t Left, std::size_t Right>
-[[nodiscard]] consteval bool route_pair_unambiguous() {
-    constexpr auto left_function = meta::endpoint_at<Namespace, Left>();
-    constexpr auto right_function = meta::endpoint_at<Namespace, Right>();
-    constexpr auto left_route = meta::route_of<left_function>();
-    constexpr auto right_route = meta::route_of<right_function>();
-    if constexpr (left_route.method != right_route.method) {
-        return true;
-    } else {
-        return !same_route_shape(route_pattern_of<left_function>(),
-                                 route_pattern_of<right_function>());
-    }
+template <std::meta::info Namespace, std::size_t... Index>
+[[nodiscard]] consteval auto compiled_api_routes_impl(
+    std::index_sequence<Index...>) {
+    return std::array<route_pattern, sizeof...(Index)>{
+        compiled_route<meta::endpoint_at<Namespace, Index>()>...};
 }
 
-template <std::meta::info Namespace, std::size_t Left = 0, std::size_t Right = 1>
+template <std::meta::info Namespace>
+inline constexpr auto compiled_api_routes = compiled_api_routes_impl<Namespace>(
+    std::make_index_sequence<meta::endpoint_count_v<Namespace>>{});
+
+template <std::meta::info Namespace, std::size_t... Index>
+[[nodiscard]] consteval auto compiled_api_methods_impl(
+    std::index_sequence<Index...>) {
+    return std::array<http_method, sizeof...(Index)>{
+        meta::route_of<meta::endpoint_at<Namespace, Index>()>().method...};
+}
+
+template <std::meta::info Namespace>
+inline constexpr auto compiled_api_methods = compiled_api_methods_impl<Namespace>(
+    std::make_index_sequence<meta::endpoint_count_v<Namespace>>{});
+
+template <std::meta::info Namespace, std::size_t... Index>
+[[nodiscard]] consteval auto compiled_api_shape_hashes_impl(
+    std::index_sequence<Index...>) {
+    return std::array<std::uint64_t, sizeof...(Index)>{
+        route_shape_hash(compiled_route<meta::endpoint_at<Namespace, Index>()>)...};
+}
+
+template <std::meta::info Namespace>
+inline constexpr auto compiled_api_shape_hashes =
+    compiled_api_shape_hashes_impl<Namespace>(
+        std::make_index_sequence<meta::endpoint_count_v<Namespace>>{});
+
+template <std::meta::info Namespace>
 [[nodiscard]] consteval bool validate_route_pairs() {
-    constexpr auto count = meta::endpoint_count<Namespace>();
-    if constexpr (count < 2 || Left >= count - 1) {
-        return true;
-    } else if constexpr (Right >= count) {
-        return validate_route_pairs<Namespace, Left + 1, Left + 2>();
-    } else if constexpr (!route_pair_unambiguous<Namespace, Left, Right>()) {
-        return false;
-    } else {
-        return validate_route_pairs<Namespace, Left, Right + 1>();
+    constexpr const auto& routes = compiled_api_routes<Namespace>;
+    constexpr const auto& methods = compiled_api_methods<Namespace>;
+    constexpr const auto& hashes = compiled_api_shape_hashes<Namespace>;
+    for (std::size_t left = 0; left < routes.size(); ++left) {
+        for (std::size_t right = left + 1; right < routes.size(); ++right) {
+            if (methods[left] == methods[right] && hashes[left] == hashes[right] &&
+                same_route_shape(routes[left], routes[right])) {
+                return false;
+            }
+        }
     }
+    return true;
 }
 
 template <std::meta::info Namespace>

@@ -20,6 +20,14 @@ static_assert(flash::routing::parse_route("/").valid());
 static_assert(flash::routing::parse_route("/users/{id}").segment_count == 2);
 static_assert(flash::routing::parse_route("/assets/{*path}").segments[1].kind ==
               flash::routing::segment_kind::catch_all);
+static_assert(flash::routing::route_shape_hash(
+                  flash::routing::parse_route("/users/{id}")) ==
+              flash::routing::route_shape_hash(
+                  flash::routing::parse_route("/users/{name}")));
+static_assert(flash::routing::route_shape_hash(
+                  flash::routing::parse_route("/users/me")) !=
+              flash::routing::route_shape_hash(
+                  flash::routing::parse_route("/users/you")));
 static_assert(flash::routing::parse_route("users").error ==
               flash::routing::route_error::missing_leading_slash);
 static_assert(flash::routing::parse_route("/users/").error ==

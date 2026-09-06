@@ -155,6 +155,14 @@ The compile failure suite now has a raw handler contract case, so each public
 diagnostic number group from endpoint discovery through middleware is represented.
 The new `FLASH-E101` case passes in Debug.
 
+Opt in synthetic targets now generate reflected APIs with 1, 10, 100, and 1,000
+routes. A fresh build measurement script uses two jobs and a 2.5 GiB sampled
+compiler memory safety limit. The original recursive conflict check exceeded
+GCC constant evaluation depth at 100 routes. It now uses compiled route arrays,
+loops, and a hash filter before exact comparison. Focused Debug and Release tests
+pass. Generated 1, 10, and 100 route executables compile and pass their runtime
+checks. The 1,000 route attempt reached the memory guard and stopped cleanly.
+
 ## Safety and recovery notes
 
 - Build presets intentionally cap Ninja at two jobs while the new reflection implementation is being characterized.

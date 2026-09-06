@@ -31,8 +31,15 @@ struct fixed_string {
         return length == 0;
     }
 
-    constexpr auto operator<=>(const fixed_string&) const = default;
+    [[nodiscard]] constexpr bool operator==(
+        const fixed_string& other) const noexcept {
+        return view() == other.view();
+    }
+
+    [[nodiscard]] constexpr auto operator<=>(
+        const fixed_string& other) const noexcept {
+        return view() <=> other.view();
+    }
 };
 
 } // namespace flash::detail
-

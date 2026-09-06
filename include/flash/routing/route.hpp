@@ -4,6 +4,7 @@
 
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <string_view>
 
 namespace flash::routing {
@@ -184,6 +185,27 @@ template <std::size_t Size>
         }
     }
     return true;
+}
+
+[[nodiscard]] constexpr std::uint64_t route_shape_hash(
+    const route_pattern& route) noexcept {
+    std::uint64_t hash = 14695981039346656037ULL;
+    const auto append = [&hash](unsigned char value) {
+        hash ^= value;
+        hash *= 1099511628211ULL;
+    };
+    append(static_cast<unsigned char>(route.segment_count));
+    for (std::size_t index = 0; index < route.segment_count; ++index) {
+        const auto& segment = route.segments[index];
+        append(static_cast<unsigned char>(segment.kind));
+        if (segment.kind == segment_kind::literal) {
+            for (const char character : segment.text.view()) {
+                append(static_cast<unsigned char>(character));
+            }
+        }
+        append(255U);
+    }
+    return hash;
 }
 
 struct path_capture {

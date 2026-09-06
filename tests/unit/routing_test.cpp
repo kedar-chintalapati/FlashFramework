@@ -10,6 +10,9 @@ namespace route_api {
 [[=flash::get("/assets/{*path}")]] int asset(std::string path);
 [[=flash::head("/health")]] void health_head();
 [[=flash::get("/health")]] void health();
+[[=flash::put("/users/{id}")]] int put_user(int id);
+[[=flash::patch("/users/{id}")]] int patch_user(int id);
+[[=flash::options("/health")]] void health_options();
 
 } // namespace route_api
 
@@ -54,7 +57,7 @@ int main() {
     const auto wrong_method = flash::routing::match_api<^^route_api>(delete_, "/users/42");
     if (wrong_method.outcome != method_not_allowed ||
         flash::routing::allow_header(wrong_method.allow_mask) !=
-            "GET, HEAD, POST, OPTIONS") {
+            "GET, HEAD, POST, PUT, PATCH, OPTIONS") {
         return 4;
     }
 
@@ -77,6 +80,22 @@ int main() {
 
     if (flash::routing::match_api<^^route_api>(get, "/unknown").outcome != not_found) {
         return 8;
+    }
+
+    const auto put_match = flash::routing::match_api<^^route_api>(put, "/users/42");
+    if (put_match.outcome != found || put_match.endpoint_index != 6) {
+        return 9;
+    }
+
+    const auto patch_match = flash::routing::match_api<^^route_api>(patch, "/users/42");
+    if (patch_match.outcome != found || patch_match.endpoint_index != 7) {
+        return 10;
+    }
+
+    const auto explicit_options =
+        flash::routing::match_api<^^route_api>(options, "/health");
+    if (explicit_options.outcome != found || explicit_options.endpoint_index != 8) {
+        return 11;
     }
     return 0;
 }

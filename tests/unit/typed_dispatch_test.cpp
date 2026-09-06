@@ -91,6 +91,19 @@ OrderReceipt create_order(CreateOrder order) {
     return {std::move(order.sku), order.quantity};
 }
 
+[[=flash::put("/orders/{id}")]]
+OrderReceipt replace_order(std::uint32_t id, CreateOrder order) {
+    return {std::move(order.sku), order.quantity + id};
+}
+
+[[=flash::patch("/orders/{id}")]]
+OrderReceipt patch_order(std::uint32_t id, CreateOrder order) {
+    return {std::move(order.sku), order.quantity + id + 1U};
+}
+
+[[=flash::options("/manual-options")]]
+void manual_options() {}
+
 [[=flash::get("/orders/{id}")]]
 std::expected<OrderReceipt, order_error> get_order(std::uint32_t id) {
     if (id == 0) {
@@ -217,6 +230,12 @@ int main() {
         return 11;
     }
 
+    const auto explicit_options =
+        request(flash::http_method::options, "/manual-options");
+    if (explicit_options.status_code != flash::status::no_content) {
+        return 21;
+    }
+
     const auto head = request(flash::http_method::head, "/add/1/2");
     if (head.status_code != flash::status::ok || !head.body.empty()) {
         return 12;
@@ -231,6 +250,20 @@ int main() {
     if (created.status_code != flash::status::ok ||
         created.body != R"({"sku":"part-42","accepted":4})") {
         return 13;
+    }
+    const auto replaced = request(
+        flash::http_method::put, "/orders/5", json_headers,
+        R"({"sku":"replacement","quantity":4})");
+    if (replaced.status_code != flash::status::ok ||
+        replaced.body != R"({"sku":"replacement","accepted":9})") {
+        return 22;
+    }
+    const auto patched = request(
+        flash::http_method::patch, "/orders/5", json_headers,
+        R"({"sku":"patch","quantity":4})");
+    if (patched.status_code != flash::status::ok ||
+        patched.body != R"({"sku":"patch","accepted":10})") {
+        return 23;
     }
     const auto invalid_body = request(
         flash::http_method::post, "/orders", json_headers,

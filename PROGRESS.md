@@ -140,6 +140,11 @@ API guide, build instructions, operational limits, roadmap, contribution guide,
 conduct policy, security process, and license. Relative links resolve and the
 new prose is plain ASCII.
 
+PUT and PATCH now have typed aggregate body tests in direct dispatch and over a
+loopback HTTP connection. Explicit OPTIONS dispatch is covered alongside the
+existing automatic OPTIONS, implicit HEAD, explicit HEAD, and DELETE cases. The
+focused routing and server tests pass in Debug and Release.
+
 ## Safety and recovery notes
 
 - Build presets intentionally cap Ninja at two jobs while the new reflection implementation is being characterized.

@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 struct CreateItem {
@@ -51,6 +52,19 @@ void erase(std::uint64_t id) {
 StoredItem create(CreateItem item) {
     return {std::move(item.name), item.quantity};
 }
+
+[[=flash::put("/items/{id}")]]
+StoredItem replace(std::uint32_t id, CreateItem item) {
+    return {std::move(item.name), item.quantity + id};
+}
+
+[[=flash::patch("/items/{id}")]]
+StoredItem patch(std::uint32_t id, CreateItem item) {
+    return {std::move(item.name), item.quantity + id + 1U};
+}
+
+[[=flash::options("/manual-options")]]
+void manual_options() {}
 
 [[=flash::get("/async-state/{value}")]]
 flash::task<int> async_state_value(int value, flash::state<Services>& services) {
@@ -153,6 +167,14 @@ int main() {
     const auto invalid_body = exchange(
         http::verb::post, "/items", true,
         R"({"name":"widget","quantity":0})", "application/json");
+    const auto replaced = exchange(
+        http::verb::put, "/items/5", true,
+        R"({"name":"replacement","quantity":2})", "application/json");
+    const auto patched = exchange(
+        http::verb::patch, "/items/5", true,
+        R"({"name":"patch","quantity":2})", "application/json");
+    const auto options = exchange(
+        http::verb::options, "/manual-options", true);
     const auto openapi = exchange(http::verb::get, "/openapi.json", true);
     const auto docs = exchange(http::verb::get, "/docs", true);
     const auto state = exchange(http::verb::get, "/async-state/2", true);
@@ -187,6 +209,17 @@ int main() {
         invalid_body.body().find("constraint_failed") == std::string::npos) {
         return 5;
     }
+    if (replaced.result() != http::status::ok ||
+        replaced.body() != R"({"name":"replacement","quantity":7})") {
+        return 14;
+    }
+    if (patched.result() != http::status::ok ||
+        patched.body() != R"({"name":"patch","quantity":8})") {
+        return 15;
+    }
+    if (options.result() != http::status::no_content || !options.body().empty()) {
+        return 16;
+    }
     if (openapi.result() != http::status::ok ||
         openapi[http::field::content_type] != "application/json" ||
         openapi.body().find("\"openapi\":\"3.1.1\"") == std::string::npos ||
@@ -216,7 +249,7 @@ int main() {
         failure.body().find("private failure text") != std::string::npos) {
         return 11;
     }
-    if (health["X-Request-ID"].size() != 32 || logs.size() != 11) {
+    if (health["X-Request-ID"].size() != 32 || logs.size() != 14) {
         return 12;
     }
     bool failure_logged = false;

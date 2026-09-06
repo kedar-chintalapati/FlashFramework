@@ -135,6 +135,11 @@ seconds with two jobs. The sampled combined compiler working set peaked at
 2,389,166 bytes for the hello server, and 338,869 bytes for the OpenAPI exporter.
 The reviewed result is in docs/benchmarks/windows-build.md.
 
+The release documentation draft now includes the quickstart, architecture flow,
+API guide, build instructions, operational limits, roadmap, contribution guide,
+conduct policy, security process, and license. Relative links resolve and the
+new prose is plain ASCII.
+
 ## Safety and recovery notes
 
 - Build presets intentionally cap Ninja at two jobs while the new reflection implementation is being characterized.

@@ -18,6 +18,14 @@ add_executable(flash_blocking_example blocking/main.cpp)
 target_link_libraries(flash_blocking_example PRIVATE flash::flash)
 flash_enable_warnings(flash_blocking_example)
 
+add_executable(flash_crud_example crud/main.cpp)
+target_link_libraries(flash_crud_example PRIVATE flash::flash)
+flash_enable_warnings(flash_crud_example)
+
+add_executable(flash_async_example async/main.cpp)
+target_link_libraries(flash_async_example PRIVATE flash::flash)
+flash_enable_warnings(flash_async_example)
+
 add_custom_target(
     flash_export_openapi
     COMMAND flash_openapi_export ${CMAKE_CURRENT_BINARY_DIR}/openapi.json

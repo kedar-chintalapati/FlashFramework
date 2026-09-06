@@ -113,5 +113,6 @@ boundaries stated in those reports.
 - [API guide](docs/api.md).
 - [Build instructions](docs/build.md).
 - [Roadmap](docs/roadmap.md).
+- [Examples](examples).
 - [Contributing](CONTRIBUTING.md).
 - [Security reporting](SECURITY.md).

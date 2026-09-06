@@ -41,6 +41,10 @@ operations. The request context carries a stop token. Stop is cooperative while
 handlers are running. Keep borrowed input inside the request lifetime.
 examples/blocking shows work moved to a separate Asio thread pool.
 
+The async example uses an Asio timer without blocking a worker. The CRUD example
+uses typed JSON requests, state, validation, status headers, and mapped errors in
+one small server.
+
 ## Documentation
 
 The development handler serves /openapi.json and /docs. Build the

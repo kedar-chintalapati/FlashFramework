@@ -145,6 +145,12 @@ loopback HTTP connection. Explicit OPTIONS dispatch is covered alongside the
 existing automatic OPTIONS, implicit HEAD, explicit HEAD, and DELETE cases. The
 focused routing and server tests pass in Debug and Release.
 
+Complete example sources now cover hello and typed paths, CRUD with state and
+domain errors, an Asio timer, explicit blocking work, raw responses, versioning,
+and OpenAPI export. The new CRUD and timer targets compile in Debug and Release.
+Release loopback smoke requests verified create, read, patch, delete, and the
+asynchronous timer response.
+
 ## Safety and recovery notes
 
 - Build presets intentionally cap Ninja at two jobs while the new reflection implementation is being characterized.

@@ -78,3 +78,4 @@ are excluded from ordinary builds. Measure one target from PowerShell.
 
 The script uses a fresh build directory and two jobs. It refuses to overlap an
 existing compiler process. Its default sampled compiler memory limit is 2.5 GiB.
+The published Windows results include the current 1,000 route memory limit.

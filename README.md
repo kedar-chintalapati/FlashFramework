@@ -104,8 +104,11 @@ The initial Windows matrix completed 384 records with zero errors. Several
 throughput cases missed the proposed target. The manual Beast baseline also has
 different lifecycle costs, which limits attribution of the measured gap.
 See the [initial report](docs/benchmarks/windows-initial.md) and
-[benchmark commands](benchmarks/README.md). Allocation claims apply only to the
-boundaries stated in those reports.
+[generated route report](docs/benchmarks/windows-routes.md). The
+[build report](docs/benchmarks/windows-build.md) records compiler memory and
+output sizes. See [benchmark commands](benchmarks/README.md) to reproduce the
+measurements. Allocation claims apply only to the boundaries stated in those
+reports.
 
 ## More information
 

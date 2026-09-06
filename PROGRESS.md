@@ -163,6 +163,13 @@ loops, and a hash filter before exact comparison. Focused Debug and Release test
 pass. Generated 1, 10, and 100 route executables compile and pass their runtime
 checks. The 1,000 route attempt reached the memory guard and stopped cleanly.
 
+Final measurements at commit 48a414f record 1, 10, and 100 route build times,
+compiler memory, executable size, and text size. The 100 route target completed
+in 30.177 seconds with 573,796,352 bytes of sampled compiler working set. The
+1,000 route target crossed a 2 GiB guard after 65.093 seconds and wrote a failure
+report before stopping. The reviewed report is in
+docs/benchmarks/windows-routes.md.
+
 ## Safety and recovery notes
 
 - Build presets intentionally cap Ninja at two jobs while the new reflection implementation is being characterized.

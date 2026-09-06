@@ -22,9 +22,15 @@ This report records a clean Release build measurement at commit
 | Hello server executable | 2,389,166 bytes |
 | OpenAPI exporter executable | 338,869 bytes |
 
-The build target included the runtime library, hello server, and OpenAPI exporter.
-The memory value is a sample of the combined working set for active `cc1plus`
-processes. A short peak between samples may not be present in the result.
+The timer started after CMake configuration. The build target included the
+runtime library, hello server, and OpenAPI exporter. Dependencies were already
+present. The memory value is a sample of the combined working set for active
+`cc1plus` processes. A short peak between samples may not be present in the
+result.
+
+The measured target set was narrower than a complete tests and examples build,
+but its 135.545 second time still exceeded the proposed 60 second budget. That
+budget is not met on this machine.
 
 The script is `benchmarks/measure-build.ps1`. Its output remains below `build` so
 that repeated measurements do not change source files.

@@ -126,7 +126,14 @@ rebuilt and ran successfully after this correction.
 
 CI now defines Windows Debug and Release jobs and Linux GCC 16.2.0 sanitizer
 coverage. Upstream action revisions are pinned. GitHub Actions is enabled.
-The first remote run still needs to be dispatched and checked after commit.
+The CI definition is committed as 88d155d. GitHub Actions run 33948817738 passed
+the Windows Debug, Windows Release, and Linux sanitizer jobs.
+
+The clean Release build measurement at commit 88d155d completed in 135.545
+seconds with two jobs. The sampled combined compiler working set peaked at
+1,628,827,648 bytes. Output sizes were 18,182 bytes for the runtime library,
+2,389,166 bytes for the hello server, and 338,869 bytes for the OpenAPI exporter.
+The reviewed result is in docs/benchmarks/windows-build.md.
 
 ## Safety and recovery notes
 

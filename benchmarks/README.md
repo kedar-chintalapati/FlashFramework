@@ -56,3 +56,15 @@ connections with one and two server workers. JSON bodies cover about 100 bytes,
 three measured trials. The result includes server CPU time. Results, core
 measurements, allocation counts, and machine metadata are written below
 `build\benchmark-results` and remain local until they are reviewed for publication.
+
+## Build measurement
+
+Run the build measurement from PowerShell.
+
+```powershell
+.\benchmarks\measure-build.ps1
+```
+
+The script creates a new Release build directory. It builds the hello server and
+OpenAPI exporter with two jobs. It records elapsed time, sampled compiler memory,
+and output sizes. It never removes an earlier measurement directory.

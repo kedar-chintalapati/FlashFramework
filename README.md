@@ -9,8 +9,8 @@ Boost 1.91.0, CMake 4.4.2, Ninja, and Conan 2.31.2. Reflection code requires
 
 ## Status
 
-Flash is under development and is not ready for production. The API and compiler
-requirements can change during the v0.1 release cycle.
+Flash 0.1.0 is experimental and is not ready for production. The API and compiler
+requirements can change in later experimental releases.
 
 Declare endpoints in a namespace and pass its reflection to the server.
 
@@ -117,5 +117,6 @@ reports.
 - [Build instructions](docs/build.md).
 - [Roadmap](docs/roadmap.md).
 - [Examples](examples).
+- [Changelog](CHANGELOG.md).
 - [Contributing](CONTRIBUTING.md).
 - [Security reporting](SECURITY.md).

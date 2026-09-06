@@ -176,6 +176,11 @@ The golden export is unchanged and its local structural check passes. The
 external validator remains available in CI. Pattern and custom callable
 validation are explicitly deferred in the API guide and roadmap.
 
+The public version is now 0.1.0 and the changelog records features and known
+limits. Header and runtime versions agree in focused Debug and Release tests.
+Full builds, package installation, clean clone, final CI, and tag checks remain
+before release.
+
 ## Safety and recovery notes
 
 - Build presets intentionally cap Ninja at two jobs while the new reflection implementation is being characterized.

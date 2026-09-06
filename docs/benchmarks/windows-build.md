@@ -16,7 +16,7 @@ This report records a clean Release build measurement at commit
 
 | Measurement | Result |
 | --- | ---: |
-| Configure and build time | 135.545 seconds |
+| Build time | 135.545 seconds |
 | Peak combined compiler working set | 1,628,827,648 bytes |
 | Runtime static library | 18,182 bytes |
 | Hello server executable | 2,389,166 bytes |

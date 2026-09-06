@@ -57,31 +57,54 @@ do {
 $process.WaitForExit()
 $timer.Stop()
 
-if ($memoryLimitReached) {
-    throw "Compiler memory safety limit reached, see $buildPath"
+$report = [ordered]@{
+    commit = (& git -C $repository rev-parse HEAD).Trim()
+    compiler = (& C:/msys64/ucrt64/bin/g++.exe -dumpfullversion)
+    generated_routes = $Routes
+    outcome = if ($memoryLimitReached) {
+        'compiler_memory_limit'
+    } elseif ($process.ExitCode -ne 0) {
+        'build_failed'
+    } else {
+        'built'
+    }
+    build_seconds = $timer.Elapsed.TotalSeconds
+    sampled_peak_compiler_working_set_bytes = $peakCompilerBytes
+    compiler_memory_safety_limit_bytes = $MaxCompilerBytes
+    sampling_interval_ms = 200
+    build_jobs = 2
 }
-if ($process.ExitCode -ne 0) {
+
+$measurementPath = Join-Path $buildPath 'measurements.json'
+if ($memoryLimitReached -or $process.ExitCode -ne 0) {
+    $json = $report | ConvertTo-Json
+    [IO.File]::WriteAllText($measurementPath, $json)
+    Write-Output $json
+    Write-Output $buildPath
+    if ($memoryLimitReached) {
+        throw "Compiler memory safety limit reached, see $buildPath"
+    }
     throw "Build failed, see $buildPath"
 }
 
 $executable = Join-Path $buildPath "benchmarks/$target.exe"
 & $executable
 if ($LASTEXITCODE -ne 0) {
+    $report['outcome'] = 'runtime_check_failed'
+    $json = $report | ConvertTo-Json
+    [IO.File]::WriteAllText($measurementPath, $json)
     throw "Generated route check failed, see $buildPath"
 }
-$report = [ordered]@{
-    commit = (& git -C $repository rev-parse HEAD).Trim()
-    compiler = (& C:/msys64/ucrt64/bin/g++.exe -dumpfullversion)
-    generated_routes = $Routes
-    build_seconds = $timer.Elapsed.TotalSeconds
-    sampled_peak_compiler_working_set_bytes = $peakCompilerBytes
-    compiler_memory_safety_limit_bytes = $MaxCompilerBytes
-    sampling_interval_ms = 200
-    build_jobs = 2
-    runtime_check = 'passed'
-    executable_bytes = (Get-Item $executable).Length
-}
+
+$sectionValues = ((& C:/msys64/ucrt64/bin/size.exe $executable |
+    Select-Object -Last 1).Trim() -split '\s+')
+$report['outcome'] = 'passed'
+$report['runtime_check'] = 'passed'
+$report['executable_bytes'] = (Get-Item $executable).Length
+$report['text_bytes'] = [long]$sectionValues[0]
+$report['data_bytes'] = [long]$sectionValues[1]
+$report['bss_bytes'] = [long]$sectionValues[2]
 $json = $report | ConvertTo-Json
-[IO.File]::WriteAllText((Join-Path $buildPath 'measurements.json'), $json)
+[IO.File]::WriteAllText($measurementPath, $json)
 Write-Output $json
 Write-Output $buildPath

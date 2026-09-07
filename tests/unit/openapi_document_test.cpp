@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cstdint>
 #include <expected>
+#include <optional>
 #include <string>
 
 struct [[=flash::schema_name("Pet")]] Pet {
@@ -31,6 +32,9 @@ std::expected<Pet, pet_error> get_pet(std::uint64_t id);
 [[=flash::post("/pets")]]
 flash::created<Pet> create_pet(CreatePet input);
 
+[[=flash::post("/optional-pet")]]
+void optional_pet([[=flash::body]] std::optional<CreatePet> input);
+
 [[=flash::get("/search")]]
 flash::text search(
     [[=flash::query("q"), =flash::min_length(2),
@@ -52,6 +56,9 @@ int main() {
     assert(first.find(R"("post":{"operationId":"create_pet")") !=
            std::string::npos);
     assert(first.find(R"("requestBody":{"required":true)") != std::string::npos);
+    assert(first.find(
+               R"("requestBody":{"required":true,"content":{"application/json":{"schema":{"anyOf":[{"$ref":"#/components/schemas/CreatePet"},{"type":"null"}]}}}})") !=
+           std::string::npos);
     assert(first.find(
                R"("name":"q","in":"query","description":"Search text","deprecated":true,"required":true,"schema":{"type":"string","minLength":2})") !=
            std::string::npos);

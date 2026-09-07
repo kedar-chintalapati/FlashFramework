@@ -91,6 +91,11 @@ OrderReceipt create_order(CreateOrder order) {
     return {std::move(order.sku), order.quantity};
 }
 
+[[=flash::post("/optional-order")]]
+int optional_order([[=flash::body]] std::optional<CreateOrder> order) {
+    return order ? static_cast<int>(order->quantity) : -1;
+}
+
 [[=flash::put("/orders/{id}")]]
 OrderReceipt replace_order(std::uint32_t id, CreateOrder order) {
     return {std::move(order.sku), order.quantity + id};
@@ -256,6 +261,18 @@ int main() {
     if (created.status_code != flash::status::ok ||
         created.body != R"({"sku":"part-42","accepted":4})") {
         return 13;
+    }
+    const auto null_optional_body = request(
+        flash::http_method::post, "/optional-order", json_headers, "null");
+    if (null_optional_body.status_code != flash::status::ok ||
+        null_optional_body.body != "-1") {
+        return 25;
+    }
+    const auto empty_optional_body = request(
+        flash::http_method::post, "/optional-order", json_headers);
+    if (empty_optional_body.status_code != flash::status::unprocessable_content ||
+        empty_optional_body.content_type != "application/problem+json") {
+        return 26;
     }
     const auto replaced = request(
         flash::http_method::put, "/orders/5", json_headers,

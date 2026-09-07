@@ -11,7 +11,7 @@ Typed request binding currently uses the default JSON limits. Route annotations
 hold at most 255 bytes, 32 segments, and 16 captures.
 
 These are per request limits. There is currently no global connection cap or
-per client rate limit. Applications exposed to untrusted traffic need an
+per client rate limit. Applications that receive untrusted traffic need an
 upstream connection limit and request rate policy. TLS, authentication, CORS,
 and authorization are application responsibilities.
 

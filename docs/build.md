@@ -7,7 +7,7 @@ Conan. CMake 4.4.2 and Ninja build the project. Other compilers are unsupported.
 
 Install MSYS2 UCRT64 GCC and Ninja. Keep its ucrt64/bin directory on PATH.
 Use native Windows Python with Conan 2.31.2. Do not mix MINGW64 and UCRT64
-libraries. The checked in presets select C:/msys64/ucrt64/bin/g++.exe.
+libraries. The committed presets select C:/msys64/ucrt64/bin/g++.exe.
 
 The Conan host profile needs these settings.
 
@@ -23,7 +23,7 @@ build_type=Release
 ```
 
 Install separate Debug and Release dependency graphs as shown in the README.
-All checked in build presets use two jobs. clangd cannot validate reflection
+All committed build presets use two jobs. clangd cannot validate reflection
 syntax in the supported setup. Use GCC diagnostics for those files.
 
 ## Linux

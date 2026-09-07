@@ -6,8 +6,9 @@ Include flash/server.hpp and link flash::runtime for a raw server.
 ## Routes
 
 Route annotations are get, post, put, patch, delete_, head, and options.
-A path starts with a slash. Literal segments outrank parameters, which outrank
-a final catch all segment. Examples are /users/me, /users/{id}, and
+A path starts with a slash. Literal segments take precedence over parameters.
+Parameters take precedence over a final catch-all segment. Examples are
+/users/me, /users/{id}, and
 /assets/{*path}. Trailing slashes are strict. Duplicate method and route shapes
 fail compilation. Method mismatches return 405 with Allow. OPTIONS is automatic
 unless an endpoint declares it. HEAD can use a GET endpoint and suppresses its

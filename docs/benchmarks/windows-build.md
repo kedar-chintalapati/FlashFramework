@@ -1,6 +1,6 @@
 # Windows build measurement
 
-This report records a clean Release build measurement at commit
+This report records a Release build measurement without prior build artifacts at commit
 `88d155dbcb127588a6d1e8d8630c490944d4f29f`.
 
 ## Environment

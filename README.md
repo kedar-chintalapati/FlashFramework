@@ -65,22 +65,10 @@ those files. Keep `-freflection` enabled.
 ## Design
 
 The compiler discovers annotated functions and derives route, binding, validation,
-JSON, and OpenAPI code. Runtime requests pass through the Beast parser, request
-views, middleware, route selection, typed binding, the endpoint, and response
-serialization. The runtime library contains shared error and version functions.
-Server templates and generated adapters remain in public headers.
-
-```text
-HTTP client
-    |
-Boost.Beast parser
-    |
-Request view and middleware
-    |
-Generated route and typed binding
-    |
-Endpoint and response serialization
-```
+JSON, and OpenAPI code. The runtime processes requests with the Beast parser,
+request views, middleware, route selection, typed binding, the endpoint, and
+response serialization. The runtime library contains shared error and version
+functions. Server templates and generated adapters remain in public headers.
 
 Endpoint discovery, route checks, binding plans, schemas, and direct invocation
 adapters are created during compilation. HTTP parsing, value conversion, JSON

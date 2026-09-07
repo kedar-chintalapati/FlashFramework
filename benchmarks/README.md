@@ -24,7 +24,7 @@ not measure all process allocations.
 100, and 1,000 routes, parameter and catch all paths, scalar parsing, query scans,
 JSON reads and writes, validation failure, problem responses, and response
 headers. Each record includes iterations, bytes, time, cycles on x86, and a
-checksum used to retain the measured work.
+checksum that prevents the compiler from removing the measured work.
 
 `flash_benchmark_allocations` intercepts global allocation only inside each
 named measurement loop. It reports route and binding work, query scans, owned

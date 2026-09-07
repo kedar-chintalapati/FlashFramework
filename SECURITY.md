@@ -10,5 +10,5 @@ maintainer profile before sharing exploit details. Do not place credentials,
 personal data, or undisclosed exploit details in a public issue.
 
 Include the affected commit, compiler, operating system, a minimal reproduction,
-and the observed impact. Review docs/limits.md before exposing a server to
-untrusted traffic.
+and the observed impact. Review docs/limits.md before allowing untrusted traffic
+to reach a server.

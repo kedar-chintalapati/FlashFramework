@@ -14,7 +14,7 @@ Windows Debug and Release tests and Linux sanitizer tests run in CI with GCC
 
 The release does not make a production, compatibility, or general zero allocation
 claim. Several throughput cases missed the proposed target. The measured build
-time missed its proposed budget. A 1,000 route generated target crossed the
-compiler memory guard. Pattern checks, custom validators, streaming, TLS helpers,
+time missed its proposed budget. The generated target with 1,000 routes exceeded
+the compiler memory limit. Pattern checks, custom validators, streaming, TLS helpers,
 multipart bodies, WebSockets, and HTTP 2 are deferred. The benchmark reports and
 roadmap contain the measured values and follow up work.

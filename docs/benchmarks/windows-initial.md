@@ -48,9 +48,9 @@ All values below use one server worker. Throughput is requests per second.
 | JSON echo about 64 KiB | 8 | 1595 | 2164 | 73.7 |
 
 The proposed 90 percent throughput target was missed in several cases.
-Throughput plateaus around eight connections for the one worker trivial routes,
-so higher connection counts include queueing. No claim about the proposed
-isolated median or p99 server overhead gates follows from these results.
+Throughput stops increasing at about eight connections for the one worker trivial
+routes, so higher connection counts include queueing. These results do not
+establish the proposed isolated median or p99 server overhead limits.
 
 The one millisecond timer workload had median round trip latency near 16
 milliseconds for both servers. Timer resolution and scheduling dominate that

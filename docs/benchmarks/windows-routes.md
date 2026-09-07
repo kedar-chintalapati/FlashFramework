@@ -23,7 +23,7 @@ before the result was accepted.
 
 The 100 route case stayed below the proposed 2 GiB compiler memory budget. The
 1,000 route case was run with a 2 GiB safety limit and was stopped when the next
-sample crossed it. No compiler or build process remained after the stop.
+sample exceeded the limit. No compiler or build process remained after the stop.
 
 Text grew by about 9.47 KiB for each added route between the one and 100 route
 targets. This is above the proposed 2 KiB investigation threshold. The current

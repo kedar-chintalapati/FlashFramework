@@ -55,7 +55,7 @@ int add(int a, int b) {
 
 [[=flash::get("/search")]]
 flash::text search([[=flash::min_length(2)]] std::string q,
-                   std::optional<int> limit) {
+                   [[=flash::minimum(1)]] std::optional<int> limit) {
     return {q + ":" + (limit ? std::to_string(*limit) : "none")};
 }
 
@@ -212,6 +212,12 @@ int main() {
     if (constrained.status_code != flash::status::unprocessable_content ||
         constrained.body.find("constraint_failed") == std::string::npos) {
         return 8;
+    }
+    const auto constrained_optional =
+        request(flash::http_method::get, "/search?q=test&limit=0");
+    if (constrained_optional.status_code != flash::status::unprocessable_content ||
+        constrained_optional.body.find("constraint_failed") == std::string::npos) {
+        return 24;
     }
 
     const auto deleted = request(flash::http_method::delete_, "/widgets/7");

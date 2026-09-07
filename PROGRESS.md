@@ -178,8 +178,22 @@ validation are explicitly deferred in the API guide and roadmap.
 
 The public version is now 0.1.0 and the changelog records features and known
 limits. Header and runtime versions agree in focused Debug and Release tests.
-Full builds, package installation, clean clone, final CI, and tag checks remain
-before release.
+
+Full Debug and Release builds completed at c78aee2 with two jobs. All 38 tests
+passed in each configuration. The optional local OpenAPI validator skipped
+because the CMake selected Python environment lacks its package. CI installs and
+requires that validator.
+
+A release correctness audit found one confirmed defect in constraints on present
+optional scalar parameters. The binder validated the optional wrapper instead of
+its contained value. The implementation now validates the contained value. A
+focused typed dispatch regression test covers valid, missing, and rejected values.
+Crossed literal and parameter route precedence is now covered explicitly and is
+independent of declaration order. Both focused Debug tests pass.
+
+Remaining release work is profile evidence, a negative and security test matrix,
+the package consumer, a clean clone check, final full tests and CI, temporary file
+removal, and the v0.1.0 tag.
 
 ## Safety and recovery notes
 

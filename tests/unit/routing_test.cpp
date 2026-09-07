@@ -16,6 +16,14 @@ namespace route_api {
 
 } // namespace route_api
 
+namespace crossed_route_api {
+
+[[=flash::get("/{left}/b")]] int parameter_first(std::string left);
+[[=flash::get("/a/{right}")]] int literal_first(std::string right);
+[[=flash::get("/a/{*rest}")]] int catch_all(std::string rest);
+
+} // namespace crossed_route_api
+
 static_assert(flash::routing::parse_route("/").valid());
 static_assert(flash::routing::parse_route("/users/{id}").segment_count == 2);
 static_assert(flash::routing::parse_route("/assets/{*path}").segments[1].kind ==
@@ -37,6 +45,7 @@ static_assert(flash::routing::parse_route("/users/{id}/{id}").error ==
 static_assert(flash::routing::parse_route("/assets/{*path}/file").error ==
               flash::routing::route_error::catch_all_not_final);
 static_assert(flash::routing::validate_route_pairs<^^route_api>());
+static_assert(flash::routing::validate_route_pairs<^^crossed_route_api>());
 
 int main() {
     using enum flash::http_method;
@@ -104,6 +113,19 @@ int main() {
         flash::routing::match_api<^^route_api>(options, "/health");
     if (explicit_options.outcome != found || explicit_options.endpoint_index != 8) {
         return 11;
+    }
+    const auto crossed =
+        flash::routing::match_api<^^crossed_route_api>(get, "/a/b");
+    if (crossed.outcome != found || crossed.endpoint_index != 1 ||
+        crossed.route.captures[0].name != "right") {
+        return 12;
+    }
+    const auto crossed_catch_all =
+        flash::routing::match_api<^^crossed_route_api>(get, "/a/b/c");
+    if (crossed_catch_all.outcome != found ||
+        crossed_catch_all.endpoint_index != 2 ||
+        crossed_catch_all.route.captures[0].value != "b/c") {
+        return 13;
     }
     return 0;
 }

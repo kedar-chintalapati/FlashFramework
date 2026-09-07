@@ -171,7 +171,7 @@ bind_parameter(const request_view& request,
                     source, std::string{name}, parsed.error().code, parsed.error().message}};
             }
             storage_type result{std::move(*parsed)};
-            auto checked = validate_parameter_constraints<Function, Index>(result);
+            auto checked = validate_parameter_constraints<Function, Index>(*result);
             if (!checked) {
                 return std::unexpected{binding_error{
                     source, std::string{name}, checked.error().code,

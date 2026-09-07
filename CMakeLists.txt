@@ -13,6 +13,11 @@ option(FLASH_BUILD_BENCHMARKS "Build Flash benchmarks" OFF)
 option(FLASH_WARNINGS_AS_ERRORS "Treat Flash warnings as errors" OFF)
 option(FLASH_NATIVE_OPTIMIZATION "Use local CPU tuning for benchmark targets" OFF)
 option(FLASH_SANITIZERS "Enable address and undefined behavior sanitizers" OFF)
+option(FLASH_PROFILE "Enable GNU gprof instrumentation for the core benchmark" OFF)
+
+if(FLASH_PROFILE AND NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    message(FATAL_ERROR "FLASH_PROFILE requires a GNU C++ compiler")
+endif()
 
 if(FLASH_SANITIZERS)
     if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR WIN32)

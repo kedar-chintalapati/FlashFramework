@@ -66,6 +66,30 @@ int main() {
     if (flash::binding::find_query_value(duplicate_query, "q")) {
         return 5;
     }
+
+    constexpr std::array duplicate_headers{
+        flash::header_view{"X-Value", "one"},
+        flash::header_view{"x-value", "two"},
+    };
+    const flash::request_view duplicate_header{
+        flash::http_method::get, "/", duplicate_headers, {}, false};
+    const auto duplicate_header_value =
+        flash::binding::find_header_value(duplicate_header, "X-Value");
+    if (duplicate_header_value ||
+        duplicate_header_value.error().code != "duplicate_header") {
+        return 6;
+    }
+
+    constexpr std::array duplicate_cookie_headers{
+        flash::header_view{"Cookie", "session=one; session=two"},
+    };
+    const flash::request_view duplicate_cookie{
+        flash::http_method::get, "/", duplicate_cookie_headers, {}, false};
+    const auto duplicate_cookie_value =
+        flash::binding::find_cookie_value(duplicate_cookie, "session");
+    if (duplicate_cookie_value ||
+        duplicate_cookie_value.error().code != "duplicate_cookie") {
+        return 7;
+    }
     return 0;
 }
-

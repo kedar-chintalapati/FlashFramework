@@ -27,6 +27,8 @@ int main() {
     flash::server_config config;
     config.port = 0;
     config.workers = 1;
+    config.header_limit = 256;
+    config.header_field_limit = 2;
     config.body_limit = 16;
     config.header_timeout = std::chrono::seconds{2};
     config.body_timeout = std::chrono::seconds{2};
@@ -116,6 +118,45 @@ int main() {
             server.stop();
             server.wait();
             return 4;
+        }
+    }
+
+    {
+        auto stream = connect_to(client_context, server.port());
+        beast::flat_buffer buffer;
+        http::request<http::empty_body> too_many_headers{
+            http::verb::get, "/health", 11};
+        too_many_headers.set(http::field::host, "127.0.0.1");
+        too_many_headers.set("X-One", "1");
+        too_many_headers.set("X-Two", "2");
+        http::write(stream, too_many_headers);
+
+        http::response<http::string_body> response;
+        http::read(stream, buffer, response);
+        if (response.result() != http::status::bad_request ||
+            response.body().find("header field limit") == std::string::npos) {
+            server.stop();
+            server.wait();
+            return 5;
+        }
+    }
+
+    {
+        auto stream = connect_to(client_context, server.port());
+        std::string oversized_header =
+            "GET /health HTTP/1.1\r\nHost: 127.0.0.1\r\nX-Large: ";
+        oversized_header.append(300, 'x');
+        oversized_header.append("\r\n\r\n");
+        asio::write(stream.socket(), asio::buffer(oversized_header));
+
+        beast::flat_buffer buffer;
+        http::response<http::string_body> response;
+        http::read(stream, buffer, response);
+        if (response.result() != http::status::bad_request ||
+            response[http::field::content_type] != "application/problem+json") {
+            server.stop();
+            server.wait();
+            return 6;
         }
     }
 

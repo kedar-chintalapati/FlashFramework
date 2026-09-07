@@ -32,12 +32,19 @@ flash_enable_warnings(flash_benchmark_request_view)
 add_executable(flash_benchmark_core micro/core.cpp)
 target_link_libraries(flash_benchmark_core PRIVATE flash::flash flash_benchmark_options)
 flash_enable_warnings(flash_benchmark_core)
-if(FLASH_PROFILE)
+if(FLASH_PROFILE_MODE STREQUAL "GENERATE")
     target_compile_options(flash_benchmark_core PRIVATE
-        $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-pg>
+        $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-fprofile-generate=${FLASH_PROFILE_DIR}>
     )
     target_link_options(flash_benchmark_core PRIVATE
-        $<$<LINK_LANG_AND_ID:CXX,GNU>:-pg>
+        $<$<LINK_LANG_AND_ID:CXX,GNU>:-fprofile-generate=${FLASH_PROFILE_DIR}>
+    )
+elseif(FLASH_PROFILE_MODE STREQUAL "USE")
+    target_compile_options(flash_benchmark_core PRIVATE
+        $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-fprofile-use=${FLASH_PROFILE_DIR};-fprofile-correction;-Wmissing-profile>
+    )
+    target_link_options(flash_benchmark_core PRIVATE
+        $<$<LINK_LANG_AND_ID:CXX,GNU>:-fprofile-use=${FLASH_PROFILE_DIR};-fprofile-correction>
     )
 endif()
 

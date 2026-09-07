@@ -13,10 +13,25 @@ option(FLASH_BUILD_BENCHMARKS "Build Flash benchmarks" OFF)
 option(FLASH_WARNINGS_AS_ERRORS "Treat Flash warnings as errors" OFF)
 option(FLASH_NATIVE_OPTIMIZATION "Use local CPU tuning for benchmark targets" OFF)
 option(FLASH_SANITIZERS "Enable address and undefined behavior sanitizers" OFF)
-option(FLASH_PROFILE "Enable GNU gprof instrumentation for the core benchmark" OFF)
+set(FLASH_PROFILE_MODE "OFF" CACHE STRING
+    "Core benchmark profile mode: OFF, GENERATE, or USE")
+set(FLASH_PROFILE_DIR "" CACHE PATH
+    "Absolute directory for GCC profile data")
+set_property(CACHE FLASH_PROFILE_MODE PROPERTY STRINGS OFF GENERATE USE)
 
-if(FLASH_PROFILE AND NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    message(FATAL_ERROR "FLASH_PROFILE requires a GNU C++ compiler")
+if(NOT FLASH_PROFILE_MODE STREQUAL "OFF" AND
+   NOT FLASH_PROFILE_MODE STREQUAL "GENERATE" AND
+   NOT FLASH_PROFILE_MODE STREQUAL "USE")
+    message(FATAL_ERROR "FLASH_PROFILE_MODE must be OFF, GENERATE, or USE")
+endif()
+
+if(NOT FLASH_PROFILE_MODE STREQUAL "OFF")
+    if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        message(FATAL_ERROR "FLASH_PROFILE_MODE requires a GNU C++ compiler")
+    endif()
+    if(FLASH_PROFILE_DIR STREQUAL "" OR NOT IS_ABSOLUTE "${FLASH_PROFILE_DIR}")
+        message(FATAL_ERROR "FLASH_PROFILE_DIR must be a nonempty absolute path")
+    endif()
 endif()
 
 if(FLASH_SANITIZERS)

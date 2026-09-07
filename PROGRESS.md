@@ -195,6 +195,21 @@ Remaining release work is profile evidence, a negative and security test matrix,
 the package consumer, a clean clone check, final full tests and CI, temporary file
 removal, and the v0.1.0 tag.
 
+The negative, limit, and security matrix is now in docs/security-matrix.md. Direct
+tests were added for duplicate scalar headers and cookies, the HTTP header field
+limit, and the HTTP header byte limit. The focused Debug binding and raw server
+tests pass.
+
+The package installed into build/package-final-20260906-2315. An independent
+consumer configured against the installed CMake package, built with two jobs, and
+passed its CTest.
+
+The first request processing profile attempt used GCC -pg and gprof at commit
+a41c1a3. Compilation and linking included -pg and gmon.out was nonempty, but gprof
+produced no function records. This is not accepted as profile evidence. The local
+profiling tool is being changed to GCC profile generation and use, with checks for
+profile data generation and consumption.
+
 ## Safety and recovery notes
 
 - Build presets intentionally cap Ninja at two jobs while the new reflection implementation is being characterized.

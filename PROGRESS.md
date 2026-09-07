@@ -216,6 +216,11 @@ the profile file name and a separate use build requested another name. The scrip
 now reconfigures the same unique profiled build path from generation mode to use
 mode while keeping the profile data in a separate result directory.
 
+The final GCC profile run at eafcc0f generated and consumed one 39,928 byte profile
+file. The use build log records the profile flags and no missing profile warning.
+Three baseline and three profile use trials completed with matching checksums.
+The reviewed medians and limits are in docs/benchmarks/windows-profile.md.
+
 ## Safety and recovery notes
 
 - Build presets intentionally cap Ninja at two jobs while the new reflection implementation is being characterized.

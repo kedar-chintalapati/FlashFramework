@@ -94,9 +94,10 @@ different lifecycle costs, which limits attribution of the measured gap.
 See the [initial report](docs/benchmarks/windows-initial.md) and
 [generated route report](docs/benchmarks/windows-routes.md). The
 [build report](docs/benchmarks/windows-build.md) records compiler memory and
-output sizes. See [benchmark commands](benchmarks/README.md) to reproduce the
-measurements. Allocation claims apply only to the boundaries stated in those
-reports.
+output sizes. The [profile report](docs/benchmarks/windows-profile.md) records
+GCC profile generation and use for core request processing cases. See
+[benchmark commands](benchmarks/README.md) to reproduce the measurements.
+Allocation claims apply only to the boundaries stated in those reports.
 
 ## More information
 
@@ -108,3 +109,4 @@ reports.
 - [Changelog](CHANGELOG.md).
 - [Contributing](CONTRIBUTING.md).
 - [Security reporting](SECURITY.md).
+- [Security test matrix](docs/security-matrix.md).

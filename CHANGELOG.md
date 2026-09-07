@@ -7,7 +7,8 @@ This is the first experimental release.
 It includes reflected endpoint discovery, compile time route checks, typed input,
 native JSON, shared validation and OpenAPI metadata, domain errors, application
 state, static middleware, Asio handlers, a bounded Beast server, development
-documentation routes, package installation, examples, and benchmark tools.
+documentation routes, package installation, examples, benchmark tools, and GCC
+profile generation and use for core request processing measurements.
 
 Windows Debug and Release tests and Linux sanitizer tests run in CI with GCC
 16.2.0. The initial Windows request matrix completed without request errors.

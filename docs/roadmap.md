@@ -7,6 +7,8 @@ Next work includes a trie or shared matcher that supports 1,000 routes within th
 compiler memory limit, equivalent baseline lifecycle costs, fewer response
 allocations, global connection limits, sustained fuzzing, and broader compiler
 validation. The current generated route report records the scaling limit.
+Representative request profiles are needed before profile results guide a source
+change.
 
 Pattern checks and custom callable validators are also deferred. They require one
 runtime error contract and matching OpenAPI behavior before they become supported.

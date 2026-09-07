@@ -79,3 +79,18 @@ are excluded from ordinary builds. Measure one target from PowerShell.
 The script uses a fresh build directory and two jobs. It refuses to overlap an
 existing compiler process. Its default sampled compiler memory limit is 2.5 GiB.
 The published Windows results include the current 1,000 route memory limit.
+
+## Profile feedback
+
+Run the core request processing profile from PowerShell.
+
+```powershell
+.\benchmarks\profile-request.ps1 -Iterations 500000 -Trials 3
+```
+
+The script creates new baseline and profiled build directories and uses two build
+jobs. It trains the core benchmark with GCC profile generation, verifies the
+profile data, rebuilds the same object path with profile use, and rejects missing
+profile warnings. Three baseline and profile use trial files, build logs, and
+machine metadata are written under `build\benchmark-results`. The measurement
+does not include HTTP transport or sockets.

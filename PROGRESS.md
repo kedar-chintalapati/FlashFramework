@@ -221,6 +221,13 @@ file. The use build log records the profile flags and no missing profile warning
 Three baseline and three profile use trials completed with matching checksums.
 The reviewed medians and limits are in docs/benchmarks/windows-profile.md.
 
+Final full Debug and Release builds completed at c6af69e with two jobs. All 38
+tests passed in each configuration. The local external OpenAPI validator skipped
+because its Python package is not installed; the structural check and golden
+export passed, and CI requires the external validator. Remaining gates are the
+final audit review, removal of this temporary file, a clean clone Release build
+and test, final CI, and the v0.1.0 tag.
+
 ## Safety and recovery notes
 
 - Build presets intentionally cap Ninja at two jobs while the new reflection implementation is being characterized.

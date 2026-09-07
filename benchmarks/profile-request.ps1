@@ -90,7 +90,8 @@ function Invoke-ConfiguredCore {
         throw "$Name configure failed; see $ConfigureLog"
     }
 
-    $buildOutput = & cmake --build $BuildDirectory --target flash_benchmark_core --parallel 2 2>&1
+    $buildOutput = & cmake --build $BuildDirectory --target flash_benchmark_core `
+        --parallel 2 --verbose 2>&1
     $buildOutput | Out-File -LiteralPath $ConfigureLog -Append -Encoding ascii
     if ($LASTEXITCODE -ne 0) {
         throw "$Name build failed; see $ConfigureLog"
@@ -159,7 +160,7 @@ $configureCommand = "cmake -S `"$repository`" -G Ninja -DCMAKE_BUILD_TYPE=Releas
     "-DCMAKE_CXX_COMPILER=$compiler -DCMAKE_TOOLCHAIN_FILE=$toolchain " +
     "-DFLASH_BUILD_TESTS=OFF -DFLASH_BUILD_EXAMPLES=OFF " +
     "-DFLASH_BUILD_BENCHMARKS=ON -DFLASH_NATIVE_OPTIMIZATION=ON"
-$buildCommand = "cmake --build <mode-build-directory> --target flash_benchmark_core --parallel 2"
+$buildCommand = "cmake --build <mode-build-directory> --target flash_benchmark_core --parallel 2 --verbose"
 $runCommand = "flash_benchmark_core.exe $Iterations"
 $metadata = [ordered]@{
     timestamp = (Get-Date).ToString("o")

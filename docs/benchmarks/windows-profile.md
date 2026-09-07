@@ -65,17 +65,18 @@ checksums matched for every case.
 | problem response | 524.260 | 466.460 | -11.03 |
 | response headers | 723.564 | 664.668 | -8.14 |
 
-Trial spread was material in several cases, especially the 64 KiB JSON read.
-The literal route, JSON write, and validation cases had clear separation between
-the three baseline values and the three profile use values. The method mask and
+Trial spread was large in several cases, especially the 64 KiB JSON read.
+The literal route, JSON write, and validation cases had distinct baseline and
+profile use values. The method mask and
 catch all route cases were effectively unchanged at this sample size.
 
 ## Decision
 
-The GCC feedback path is kept as an optional benchmark tool. It is not enabled
-for the public package. The measured training run includes all benchmark cases in
-one synthetic mix, so it does not justify a framework source change or a claim
-about HTTP throughput, sockets, Beast, coroutines, or production workloads.
+The GCC profile workflow is available as an optional benchmark tool. It is not
+enabled for the public package. The measured training run includes all benchmark
+cases in one combined benchmark workload, so it does not justify a framework
+source change or a claim about HTTP throughput, sockets, Beast, coroutines, or
+production workloads.
 
 Follow up work will profile representative request mixes and confirm any proposed
 source change with the end to end benchmark matrix. Route matcher structure and

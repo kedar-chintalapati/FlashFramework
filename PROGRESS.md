@@ -210,6 +210,12 @@ produced no function records. This is not accepted as profile evidence. The loca
 profiling tool is being changed to GCC profile generation and use, with checks for
 profile data generation and consumption.
 
+The first GCC profile generation run produced a nonempty 39,928 byte .gcda file.
+The guarded use build rejected it because GCC includes the build object path in
+the profile file name and a separate use build requested another name. The script
+now reconfigures the same unique profiled build path from generation mode to use
+mode while keeping the profile data in a separate result directory.
+
 ## Safety and recovery notes
 
 - Build presets intentionally cap Ninja at two jobs while the new reflection implementation is being characterized.

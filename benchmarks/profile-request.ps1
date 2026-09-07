@@ -45,8 +45,7 @@ if ([IO.Directory]::Exists($resultRoot)) {
 }
 
 $baselineBuild = Join-Path $buildRoot "baseline"
-$generationBuild = Join-Path $buildRoot "generation"
-$useBuild = Join-Path $buildRoot "use"
+$profiledBuild = Join-Path $buildRoot "profiled"
 $dataPath = Join-Path $resultRoot "data"
 $baselineResults = Join-Path $resultRoot "baseline"
 $generationResults = Join-Path $resultRoot "generation"
@@ -132,8 +131,8 @@ $generationLog = Join-Path $generationResults "build.log"
 $useLog = Join-Path $useResults "build.log"
 
 Invoke-ConfiguredCore "baseline" $baselineBuild "OFF" $baselineLog
-Invoke-ConfiguredCore "generation" $generationBuild "GENERATE" $generationLog
-Invoke-CoreTrials "generation" $generationBuild $generationResults 1
+Invoke-ConfiguredCore "generation" $profiledBuild "GENERATE" $generationLog
+Invoke-CoreTrials "generation" $profiledBuild $generationResults 1
 
 $profileFiles = @(Get-ChildItem -LiteralPath $profileDirectory -Recurse -File -Filter "*.gcda")
 $nonemptyProfileFiles = @($profileFiles | Where-Object { $_.Length -gt 0 })
@@ -141,14 +140,14 @@ if ($nonemptyProfileFiles.Count -eq 0) {
     throw "GCC profile generation produced no nonempty .gcda files in $profileDirectory"
 }
 
-Invoke-ConfiguredCore "use" $useBuild "USE" $useLog
+Invoke-ConfiguredCore "use" $profiledBuild "USE" $useLog
 $missingProfileDiagnostics = Select-String -LiteralPath $useLog -Pattern `
     "(?i)missing profile|profile count data file not found|profile data.*not found|not found.*profile"
 if ($null -ne $missingProfileDiagnostics) {
     throw "GCC reported missing profile data; see $useLog"
 }
 Invoke-CoreTrials "baseline" $baselineBuild $baselineResults $Trials
-Invoke-CoreTrials "use" $useBuild $useResults $Trials
+Invoke-CoreTrials "use" $profiledBuild $useResults $Trials
 
 $commit = (& git -C $repository rev-parse HEAD 2>$null).Trim()
 if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($commit)) {
@@ -186,8 +185,10 @@ $metadata = [ordered]@{
     build_command = $buildCommand
     run_command = $runCommand
     baseline_build_directory = $baselineBuild
-    generation_build_directory = $generationBuild
-    use_build_directory = $useBuild
+    generation_build_directory = $profiledBuild
+    use_build_directory = $profiledBuild
+    profile_build_reused = $true
+    profile_build_reuse_reason = "GCC profile file names include the object path"
     result_directory = $resultRoot
     scope = "framework request-processing microbenchmarks; excludes transport and sockets"
 }

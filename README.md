@@ -1,16 +1,11 @@
 # Flash
 
-Flash is an experimental C++26 REST framework. Static reflection provides route,
+Flash is an experimental C++26 REST API framework. Static reflection provides route,
 binding, validation, JSON, and OpenAPI metadata before the server starts.
 
 The reference environment is Windows 11 with MSYS2 UCRT64 GCC 16.2.0,
 Boost 1.91.0, CMake 4.4.2, Ninja, and Conan 2.31.2. Reflection code requires
-`-freflection`. The first release is experimental.
-
-## Status
-
-Flash 0.1.0 is experimental and is not ready for production. The API and compiler
-requirements can change in later experimental releases.
+`-freflection`.
 
 Declare endpoints in a namespace and pass its reflection to the server.
 
@@ -84,29 +79,15 @@ graceful shutdown. Request and JSON parser limits have finite defaults.
 HTTP 1.1 is the only transport. TLS termination, authentication, rate limiting,
 and deployment policy belong to the application or its reverse proxy. Streaming,
 multipart bodies, WebSockets, and HTTP 2 are deferred. There is no production
-support or API compatibility guarantee. See [operational limits](docs/limits.md).
+support or API compatibility guarantee. See [limits](docs/limits.md).
 
 ## Measurements
-
-The initial Windows matrix completed 384 records with zero errors. Several
-throughput cases missed the proposed target. The manual Beast baseline also has
-different lifecycle costs, which limits attribution of the measured gap.
-See the [initial report](docs/benchmarks/windows-initial.md) and
-[generated route report](docs/benchmarks/windows-routes.md). The
-[build report](docs/benchmarks/windows-build.md) records compiler memory and
-output sizes. The [profile report](docs/benchmarks/windows-profile.md) records
-GCC profile generation and use for core request processing cases. See
-[benchmark commands](benchmarks/README.md) to reproduce the measurements.
-Allocation claims apply only to the boundaries stated in those reports.
+See [benchmarks](benchmarks/README.md).
 
 ## More information
 
 - [Tutorial](docs/tutorial.md).
 - [API guide](docs/api.md).
 - [Build instructions](docs/build.md).
-- [Roadmap](docs/roadmap.md).
 - [Examples](examples).
-- [Changelog](CHANGELOG.md).
-- [Contributing](CONTRIBUTING.md).
-- [Security reporting](SECURITY.md).
 - [Security test matrix](docs/security-matrix.md).

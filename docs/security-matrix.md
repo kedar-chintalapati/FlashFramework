@@ -34,6 +34,5 @@ It describes tests that exist; it does not claim that unlisted cases are safe.
   Operators must provide these controls upstream and monitor resource exhaustion.
 - This matrix does not represent an independent security audit. Arrange a security review
   before production use, especially for custom handlers, middleware, and proxy settings.
-- The project currently describes itself as experimental in `SECURITY.md`; deployment
-  owners remain responsible for threat modeling, patching, monitoring, incident response,
+- Deployment owners remain responsible for threat modeling, patching, monitoring, incident response,
   and secret handling.

@@ -24,5 +24,4 @@ Responses and bodies are buffered. Large output values can allocate according
 to application data. Borrowed request data becomes invalid when the request
 finishes. Do not store request views in background tasks.
 
-The project is experimental and has not had an independent security audit.
-The benchmark report documents missed targets and comparison limitations.
+The project is experimental.

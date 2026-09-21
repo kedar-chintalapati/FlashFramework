@@ -43,8 +43,8 @@ ctest --preset debug
 ```
 
 The presets expect GCC at C:/msys64/ucrt64/bin/g++.exe and a Conan profile for
-Windows, x86_64, GCC 16, libstdc++11, and C++26. The setup guide describes this
-profile. In another terminal, request http://127.0.0.1:8080/hello or open /docs.
+Windows, x86_64, GCC 16, libstdc++11, and C++26. See [build instructions](docs/build.md) for the expected conan profile.
+In another terminal, request http://127.0.0.1:8080/hello or open /docs.
 For Release, install Conan dependencies into build/conan/release with
 build_type=Release and use the release presets.
 
